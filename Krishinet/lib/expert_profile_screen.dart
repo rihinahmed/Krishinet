@@ -412,7 +412,7 @@ class _ExpertProfileScreenState extends State<ExpertProfileScreen> {
               ],
             ),
           ),
-          Switch(value: value, activeColor: primary, onChanged: onChanged),
+          Switch(value: value, activeThumbColor: primary, onChanged: onChanged),
         ],
       ),
     );

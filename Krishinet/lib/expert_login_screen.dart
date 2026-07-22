@@ -198,8 +198,11 @@ class _ExpertLoginScreenState extends State<ExpertLoginScreen>
               const SizedBox(height: 24),
 
               // Password Input
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              Wrap(
+                alignment: WrapAlignment.spaceBetween,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                spacing: 8,
+                runSpacing: 4,
                 children: [
                   _buildInputLabel('PASSWORD', Icons.lock),
                   Text(
@@ -281,8 +284,11 @@ class _ExpertLoginScreenState extends State<ExpertLoginScreen>
                   elevation: 10,
                   shadowColor: primaryColor.withValues(alpha: 0.3),
                 ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
+                child: Wrap(
+                  alignment: WrapAlignment.center,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  spacing: 8,
+                  runSpacing: 4,
                   children: [
                     Text(
                       'Sign In',
@@ -291,7 +297,6 @@ class _ExpertLoginScreenState extends State<ExpertLoginScreen>
                         fontWeight: FontWeight.w600,
                       ),
                     ),
-                    const SizedBox(width: 8),
                     const Icon(Icons.arrow_forward, size: 20),
                   ],
                 ),
@@ -301,8 +306,11 @@ class _ExpertLoginScreenState extends State<ExpertLoginScreen>
               const SizedBox(height: 16),
 
               // Support Link
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
+              Wrap(
+                alignment: WrapAlignment.center,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                spacing: 4,
+                runSpacing: 4,
                 children: [
                   Text(
                     'Require assistance? ',

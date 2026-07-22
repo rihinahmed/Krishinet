@@ -514,7 +514,7 @@ class _ExpertSignupScreenState extends State<ExpertSignupScreen>
           ),
         ),
         DropdownButtonFormField<String>(
-          value: _selectedSpecialization,
+          initialValue: _selectedSpecialization,
           dropdownColor: const Color(0xFF1F2222),
           style: GoogleFonts.plusJakartaSans(color: onSurface, fontSize: 14),
           icon: Icon(Icons.arrow_drop_down, color: onSurfaceVariant),
