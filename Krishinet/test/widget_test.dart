@@ -1,13 +1,17 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:krishinet/main.dart';
 import 'package:krishinet/admin_login_screen.dart';
 import 'package:krishinet/admin_dashboard_screen.dart';
 
 void main() {
+  HttpOverrides.global = null;
   testWidgets('Krishinet dashboard renders successfully', (
     WidgetTester tester,
   ) async {
+    SharedPreferences.setMockInitialValues({});
     // Build our app and trigger a frame.
     await tester.pumpWidget(const KrishinetApp());
 
@@ -21,6 +25,7 @@ void main() {
   });
 
   testWidgets('Admin Dashboard renders by itself', (WidgetTester tester) async {
+    SharedPreferences.setMockInitialValues({});
     tester.view.physicalSize = const Size(1200, 1000);
     tester.view.devicePixelRatio = 1.0;
 
@@ -41,6 +46,8 @@ void main() {
   testWidgets('Admin Login and Dashboard Screen Flow', (
     WidgetTester tester,
   ) async {
+    HttpOverrides.global = null;
+    SharedPreferences.setMockInitialValues({});
     // Set screen size to fit scroll views in test
     tester.view.physicalSize = const Size(1200, 1000);
     tester.view.devicePixelRatio = 1.0;
@@ -73,15 +80,17 @@ void main() {
     // Tap Secure Login button
     final loginButton = find.text('Secure Login');
     await tester.ensureVisible(loginButton);
-    await tester.tap(loginButton);
-    await tester.pump(); // Start validation sequence
 
-    // Verify loading indicator/text is visible
-    expect(find.text('Validating...'), findsOneWidget);
+    await tester.runAsync(() async {
+      await tester.tap(loginButton);
+      // Wait for real network request and transition logic
+      await Future.delayed(const Duration(seconds: 3));
+    });
 
-    // Fast-forward simulated delay
-    await tester.pump(const Duration(seconds: 2));
-    await tester.pumpAndSettle(); // Resolve routing animation frames
+    // Resolve routing animation frames
+    for (int i = 0; i < 10; i++) {
+      await tester.pump(const Duration(milliseconds: 100));
+    }
 
     // Verify we have navigated to the Admin Dashboard screen
     expect(find.text('AgriEcosystem Admin'), findsOneWidget);

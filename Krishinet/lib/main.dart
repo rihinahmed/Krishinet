@@ -399,7 +399,10 @@ class _GlassContainer extends StatelessWidget {
           decoration: BoxDecoration(
             color: const Color(0xFF122131).withValues(alpha: 0.6),
             borderRadius: BorderRadius.circular(borderRadius),
-            border: Border.all(color: Colors.white.withValues(alpha: 0.05), width: 1),
+            border: Border.all(
+              color: Colors.white.withValues(alpha: 0.05),
+              width: 1,
+            ),
           ),
           child: Center(child: child),
         ),

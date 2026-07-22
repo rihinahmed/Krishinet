@@ -293,10 +293,14 @@ class _NgoLoginScreenState extends State<NgoLoginScreen>
                 const SizedBox(height: 16),
 
                 // Remember Me & Forgot Password
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                Wrap(
+                  alignment: WrapAlignment.spaceBetween,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  spacing: 16,
+                  runSpacing: 10,
                   children: [
                     Row(
+                      mainAxisSize: MainAxisSize.min,
                       children: [
                         SizedBox(
                           height: 20,
@@ -396,8 +400,11 @@ class _NgoLoginScreenState extends State<NgoLoginScreen>
                     elevation: 8,
                     shadowColor: primaryColor.withValues(alpha: 0.4),
                   ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
+                  child: Wrap(
+                    alignment: WrapAlignment.center,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    spacing: 8,
+                    runSpacing: 4,
                     children: [
                       Text(
                         'Sign In',
@@ -406,7 +413,6 @@ class _NgoLoginScreenState extends State<NgoLoginScreen>
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      const SizedBox(width: 8),
                       const Icon(Icons.arrow_forward, size: 20),
                     ],
                   ),
@@ -470,8 +476,11 @@ class _NgoLoginScreenState extends State<NgoLoginScreen>
                   ],
                 ),
                 const SizedBox(height: 24),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
+                Wrap(
+                  alignment: WrapAlignment.center,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  spacing: 4,
+                  runSpacing: 4,
                   children: [
                     Text(
                       "New partner? ",

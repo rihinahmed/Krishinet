@@ -317,7 +317,7 @@ class _FarmerSignupScreenState extends State<FarmerSignupScreen>
               // Primary Crop Dropdown
               _buildInputLabel('PRIMARY CROP'),
               DropdownButtonFormField<String>(
-                value: _selectedCrop,
+                initialValue: _selectedCrop,
                 dropdownColor: surfaceContainerHigh,
                 icon: Icon(
                   Icons.expand_more,

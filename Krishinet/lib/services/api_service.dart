@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'storage_service.dart';
@@ -7,7 +8,10 @@ class ApiService {
   // Use 10.0.2.2 for Android emulator to reach host machine localhost.
   // For web (Flutter web), use localhost directly.
   static String get baseUrl {
-    if (kIsWeb) return 'http://localhost:5000/api';
+    if (kIsWeb) return 'http://127.0.0.1:5000/api';
+    if (Platform.environment.containsKey('FLUTTER_TEST')) {
+      return 'http://127.0.0.1:5000/api';
+    }
     return 'http://10.0.2.2:5000/api'; // Android emulator
     // For physical device on same network: 'http://192.168.X.X:5000/api'
   }

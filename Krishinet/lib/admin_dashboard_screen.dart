@@ -663,7 +663,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                     fontSize: 12,
                   ),
                 ),
-                activeColor: primaryColor,
+                activeThumbColor: primaryColor,
               ),
               SwitchListTile(
                 value: false,
@@ -682,7 +682,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                     fontSize: 12,
                   ),
                 ),
-                activeColor: primaryColor,
+                activeThumbColor: primaryColor,
               ),
               const SizedBox(height: 20),
               ElevatedButton.icon(

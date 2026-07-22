@@ -359,8 +359,11 @@ class _FarmerLoginScreenState extends State<FarmerLoginScreen>
               const SizedBox(height: 20),
 
               // Password Input
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              Wrap(
+                alignment: WrapAlignment.spaceBetween,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                spacing: 8,
+                runSpacing: 4,
                 children: [
                   Text(
                     'Security Key',
@@ -490,8 +493,11 @@ class _FarmerLoginScreenState extends State<FarmerLoginScreen>
                   elevation: 8,
                   shadowColor: primaryColor.withValues(alpha: 0.3),
                 ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
+                child: Wrap(
+                  alignment: WrapAlignment.center,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  spacing: 8,
+                  runSpacing: 4,
                   children: [
                     Text(
                       'Sign In',
@@ -500,7 +506,6 @@ class _FarmerLoginScreenState extends State<FarmerLoginScreen>
                         fontWeight: FontWeight.w600,
                       ),
                     ),
-                    const SizedBox(width: 8),
                     const Icon(Icons.arrow_forward, size: 20),
                   ],
                 ),
@@ -564,8 +569,11 @@ class _FarmerLoginScreenState extends State<FarmerLoginScreen>
               ),
             );
           }, // Navigate to sign up
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
+          child: Wrap(
+            alignment: WrapAlignment.center,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            spacing: 4,
+            runSpacing: 4,
             children: [
               Text(
                 'Join Krishinet',
@@ -575,7 +583,6 @@ class _FarmerLoginScreenState extends State<FarmerLoginScreen>
                   color: primaryColor,
                 ),
               ),
-              const SizedBox(width: 4),
               Icon(Icons.energy_savings_leaf, color: primaryColor, size: 20),
             ],
           ),
