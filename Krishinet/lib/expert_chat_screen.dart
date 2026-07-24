@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:krishinet/core/utils/constants.dart';
 
 class FarmerChat {
   final String id;
@@ -12,6 +13,7 @@ class FarmerChat {
   final bool isUrgent;
   final String cropContext;
   final List<ChatMessage> messages;
+  final String role;
 
   FarmerChat({
     required this.id,
@@ -23,6 +25,7 @@ class FarmerChat {
     required this.isUrgent,
     required this.cropContext,
     required this.messages,
+    required this.role,
   });
 }
 
@@ -65,6 +68,7 @@ class _ExpertChatScreenState extends State<ExpertChatScreen> {
 
   FarmerChat? _selectedChat;
   String _searchQuery = "";
+  String _selectedRoleFilter = "All";
 
   late List<FarmerChat> _chatRooms;
 
@@ -75,7 +79,7 @@ class _ExpertChatScreenState extends State<ExpertChatScreen> {
     _chatRooms = [
       FarmerChat(
         id: '1',
-        name: 'Amit Singh',
+        name: 'Selim Rahman',
         lastMessage:
             'The yellow spots are spreading to lower leaves. What should I spray?',
         time: 'Typing...',
@@ -84,6 +88,7 @@ class _ExpertChatScreenState extends State<ExpertChatScreen> {
         isOnline: true,
         isUrgent: true,
         cropContext: 'Wheat • North Acre Area',
+        role: 'farmer',
         messages: [
           ChatMessage(
             text: "Hello Doctor, I recently uploaded soil reports.",
@@ -92,7 +97,7 @@ class _ExpertChatScreenState extends State<ExpertChatScreen> {
           ),
           ChatMessage(
             text:
-                "Thanks Amit, I reviewed the report. Nitrogen is slightly low, but the visual leaf symptoms look like early-stage Rust disease.",
+                "Thanks Selim, I reviewed the report. Nitrogen is slightly low, but the visual leaf symptoms look like early-stage Rust disease.",
             isMe: true,
             time: DateTime.now().subtract(const Duration(minutes: 15)),
           ),
@@ -106,7 +111,7 @@ class _ExpertChatScreenState extends State<ExpertChatScreen> {
       ),
       FarmerChat(
         id: '2',
-        name: 'Meena Rao',
+        name: 'Mina Khatun',
         lastMessage:
             'Organic manure options list has been submitted for subsidy.',
         time: '2m ago',
@@ -115,6 +120,7 @@ class _ExpertChatScreenState extends State<ExpertChatScreen> {
         isOnline: false,
         isUrgent: false,
         cropContext: 'Paddy • South Block',
+        role: 'buyer',
         messages: [
           ChatMessage(
             text: "Can I use compost manure instead of chemical fertilizer?",
@@ -136,7 +142,7 @@ class _ExpertChatScreenState extends State<ExpertChatScreen> {
       ),
       FarmerChat(
         id: '3',
-        name: 'Vikram Jit',
+        name: 'Kabir Uddin',
         lastMessage: 'Ok thanks, I will discuss this with the local Officer.',
         time: '15m ago',
         imageUrl:
@@ -144,6 +150,7 @@ class _ExpertChatScreenState extends State<ExpertChatScreen> {
         isOnline: true,
         isUrgent: false,
         cropContext: 'Mustard • West Block',
+        role: 'govt',
         messages: [
           ChatMessage(
             text: "Do we have any intercropping circular benefits?",
@@ -191,10 +198,10 @@ class _ExpertChatScreenState extends State<ExpertChatScreen> {
       if (!mounted || _selectedChat == null) return;
       String replyText =
           "Understood. I recommend applying a copper-based fungicide (like Blitox 50g in 15L water) or bio-agents. Let me verify soil humidity ranges first.";
-      if (_selectedChat!.name.contains("Meena")) {
+      if (_selectedChat!.name.contains("Mina")) {
         replyText =
             "Circular approval is pending from District HQ. I will keep you posted.";
-      } else if (_selectedChat!.name.contains("Vikram")) {
+      } else if (_selectedChat!.name.contains("Kabir")) {
         replyText =
             "Make sure seed spacing is 30x10 cm for mustard to achieve the best results.";
       }
@@ -232,10 +239,14 @@ class _ExpertChatScreenState extends State<ExpertChatScreen> {
   Widget _buildChatRoomsListView() {
     final filteredRooms =
         _chatRooms.where((room) {
-          return room.name.toLowerCase().contains(_searchQuery.toLowerCase()) ||
+          final matchesSearch =
+              room.name.toLowerCase().contains(_searchQuery.toLowerCase()) ||
               room.cropContext.toLowerCase().contains(
                 _searchQuery.toLowerCase(),
               );
+          final matchesRole =
+              _selectedRoleFilter == "All" || room.role == _selectedRoleFilter;
+          return matchesSearch && matchesRole;
         }).toList();
 
     Widget body = Column(
@@ -270,6 +281,44 @@ class _ExpertChatScreenState extends State<ExpertChatScreen> {
             ),
           ),
         ),
+
+        // Horizontal Role Filter
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 4.0),
+          child: Row(
+            children: [
+              {'label': 'All', 'value': 'All'},
+              {'label': 'Farmers', 'value': 'farmer'},
+              {'label': 'Buyers', 'value': 'buyer'},
+              {'label': 'Govt Officers', 'value': 'govt'},
+            ].map((filter) {
+              final isSelected = _selectedRoleFilter == filter['value'];
+              return Padding(
+                padding: const EdgeInsets.only(right: 8.0),
+                child: ChoiceChip(
+                  label: Text(filter['label']!),
+                  selected: isSelected,
+                  selectedColor: primary.withValues(alpha: 0.2),
+                  backgroundColor: surfaceContainer,
+                  labelStyle: TextStyle(
+                    color: isSelected ? primary : Colors.white70,
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  onSelected: (val) {
+                    if (val) {
+                      setState(() {
+                        _selectedRoleFilter = filter['value']!;
+                      });
+                    }
+                  },
+                ),
+              );
+            }).toList(),
+          ),
+        ),
+        const SizedBox(height: 8),
 
         Expanded(
           child:
@@ -356,7 +405,7 @@ class _ExpertChatScreenState extends State<ExpertChatScreen> {
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     image: DecorationImage(
-                      image: NetworkImage(room.imageUrl),
+                      image: AppConstants.buildImageProvider(room.imageUrl),
                       fit: BoxFit.cover,
                     ),
                   ),
@@ -451,7 +500,7 @@ class _ExpertChatScreenState extends State<ExpertChatScreen> {
         title: Row(
           children: [
             CircleAvatar(
-              backgroundImage: NetworkImage(_selectedChat!.imageUrl),
+              backgroundImage: AppConstants.buildImageProvider(_selectedChat!.imageUrl),
             ),
             const SizedBox(width: 10),
             Expanded(

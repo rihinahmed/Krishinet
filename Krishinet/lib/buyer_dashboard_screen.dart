@@ -788,7 +788,7 @@ class _BuyerDashboardScreenState extends State<BuyerDashboardScreen> {
               child: _buildMarketItemCard(
                 'Premium Durum',
                 'Punjab • 500t',
-                '৳2,450',
+                '৳24.50',
                 'Organic',
                 AppColors.primary,
                 AppColors.onPrimary,
@@ -800,7 +800,7 @@ class _BuyerDashboardScreenState extends State<BuyerDashboardScreen> {
               child: _buildMarketItemCard(
                 'Sweet Yellow Corn',
                 'Maha • 120t',
-                '৳1,820',
+                '৳18.20',
                 'Top Seller',
                 AppColors.surfaceContainerHighest,
                 AppColors.onSurface,
@@ -932,7 +932,7 @@ class _BuyerDashboardScreenState extends State<BuyerDashboardScreen> {
                           ),
                           children: const [
                             TextSpan(
-                              text: '/q',
+                              text: '/kg',
                               style: TextStyle(
                                 fontSize: 10,
                                 color: AppColors.onSurfaceVariant,
@@ -1256,28 +1256,28 @@ class _BuyerDashboardScreenState extends State<BuyerDashboardScreen> {
       {
         'name': 'Premium Durum Wheat',
         'location': 'Punjab • 500t',
-        'price': '৳2,450',
+        'price': '৳24.50/kg',
         'badge': 'ORGANIC',
         'img': 'images/crop1.jpg',
       },
       {
         'name': 'Basmati Rice',
         'location': 'Haryana • 200t',
-        'price': '৳3,100',
+        'price': '৳31.00/kg',
         'badge': 'PREMIUM',
         'img': 'images/crop2.jpg',
       },
       {
         'name': 'Mustard Seeds',
         'location': 'Rajasthan • 80t',
-        'price': '৳5,200',
+        'price': '৳52.00/kg',
         'badge': 'CERTIFIED',
         'img': 'images/crop3.jpg',
       },
       {
         'name': 'Yellow Maize',
         'location': 'MP • 300t',
-        'price': '৳1,820',
+        'price': '৳18.20/kg',
         'badge': 'TOP SELLER',
         // Reuses an existing asset instead of pointing at a crop4.jpg
         // that was never declared — this was likely crashing the tab.

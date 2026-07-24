@@ -1,10 +1,11 @@
-import 'dart:io';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'environment.dart';
 
 class AppConstants {
   static const String appName = 'Krishinet';
   static const String apiBaseUrl = 'https://api.krishinet.com/v1';
+
+  static bool get isTesting => isTestingEnv;
 
   // Helper widget to safely build network images without throwing HTTP 400 exceptions during widget testing
   static Widget buildNetworkImage({
@@ -15,7 +16,7 @@ class AppConstants {
     double? width,
     double? height,
   }) {
-    if (!kIsWeb && Platform.environment.containsKey('FLUTTER_TEST')) {
+    if (isTesting) {
       return errorBuilder(context, Exception('Testing env placeholder'), null);
     }
     return Image.network(
@@ -29,7 +30,7 @@ class AppConstants {
 
   // Helper method to safely return an ImageProvider for tests
   static ImageProvider buildImageProvider(String url) {
-    if (!kIsWeb && Platform.environment.containsKey('FLUTTER_TEST')) {
+    if (isTesting) {
       return const AssetImage('assets/images/avatar.jpg');
     }
     return NetworkImage(url);

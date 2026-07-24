@@ -510,6 +510,33 @@ class _FarmerLoginScreenState extends State<FarmerLoginScreen>
                   ],
                 ),
               ),
+              const SizedBox(height: 16),
+              OutlinedButton.icon(
+                onPressed: () {
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const FarmerDashboardScreen(isGuest: true),
+                    ),
+                  );
+                },
+                style: OutlinedButton.styleFrom(
+                  side: BorderSide(color: primaryColor.withValues(alpha: 0.5), width: 1.5),
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                icon: Icon(Icons.person_outline, color: primaryColor, size: 20),
+                label: Text(
+                  'Login as Guest',
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: primaryColor,
+                  ),
+                ),
+              ),
             ],
           ),
         ),

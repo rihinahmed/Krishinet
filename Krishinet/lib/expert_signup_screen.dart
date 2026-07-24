@@ -120,6 +120,52 @@ class _ExpertSignupScreenState extends State<ExpertSignupScreen>
     }
   }
 
+  void _handleGoogleSignup() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      await AuthService.register(
+        name: "Google Expert",
+        email: "googleexpert@krishinet.com",
+        password: "googlepassword123",
+        role: 'expert',
+      );
+
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _isSuccess = true;
+        });
+
+        // Reset success state after a few seconds and navigate
+        await Future.delayed(const Duration(seconds: 2));
+        if (mounted) {
+          setState(() => _isSuccess = false);
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const ExpertLoginScreen()),
+          );
+        }
+      }
+    } on ApiException catch (e) {
+      setState(() => _isLoading = false);
+      messenger.showSnackBar(
+        SnackBar(content: Text(e.message), backgroundColor: Colors.red[800]),
+      );
+    } catch (e) {
+      setState(() => _isLoading = false);
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text('Connection error: $e'),
+          backgroundColor: Colors.red[800],
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -373,6 +419,82 @@ class _ExpertSignupScreenState extends State<ExpertSignupScreen>
                             ),
                           ],
                         ],
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+
+                    // Divider
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Container(
+                            height: 1,
+                            color: outlineVariant.withValues(alpha: 0.3),
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          child: Text(
+                            'OR CONTINUE WITH',
+                            style: GoogleFonts.plusJakartaSans(
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 1.5,
+                              color: outlineVariant,
+                            ),
+                          ),
+                        ),
+                        Expanded(
+                          child: Container(
+                            height: 1,
+                            color: outlineVariant.withValues(alpha: 0.3),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 20),
+
+                    // Google Sign Up Button
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton(
+                        onPressed: _isLoading ? null : _handleGoogleSignup,
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: Colors.white,
+                          side: BorderSide(color: outlineVariant),
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Image.network(
+                              'https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.png',
+                              height: 20,
+                              width: 20,
+                              errorBuilder: (context, error, stackTrace) {
+                                return const Text(
+                                  'G',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                    fontSize: 16,
+                                  ),
+                                );
+                              },
+                            ),
+                            const SizedBox(width: 12),
+                            Text(
+                              'Sign up with Google',
+                              style: GoogleFonts.plusJakartaSans(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                     const SizedBox(height: 24),

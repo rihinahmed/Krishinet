@@ -28,10 +28,8 @@ class _ChoosePathScreenState extends State<ChoosePathScreen>
   final Color onSurface = const Color(0xFFD4E4FA);
   final Color errorColor = const Color(0xFFFFB4AB);
   final Color onErrorColor = const Color(0xFF690005);
-  final Color cardGlass = const Color(0xFF1F2222).withValues(alpha: 0.6);
-  final Color cardActive = const Color(0xFF122131);
-
   int _selectedIndex = 0; // Default to Farmer (0)
+  int? _transitioningRoleIndex;
 
   // Particle Animation System
   late AnimationController _particleController;
@@ -39,10 +37,82 @@ class _ChoosePathScreenState extends State<ChoosePathScreen>
   final Random _random = Random();
 
   final List<Map<String, dynamic>> _roles = [
-    {'title': 'Farmer', 'icon': Icons.agriculture},
-    {'title': 'Agri-Expert', 'icon': Icons.psychology},
-    {'title': 'Buyer', 'icon': Icons.shopping_cart},
-    {'title': 'Government Officials', 'icon': Icons.favorite},
+    {
+      'title': 'Farmer',
+      'icon': Icons.agriculture,
+      'bgImage': 'assets/images/plants.jpg',
+      'glowColor': const Color(0xFF54E167),
+      'activeGradient': const LinearGradient(
+        colors: [Color(0xFF1B5E20), Color(0xFF2E7D32), Color(0xFF4CAF50)],
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+      ),
+      'inactiveGradient': LinearGradient(
+        colors: [
+          const Color(0xFF142C1E).withValues(alpha: 0.85),
+          const Color(0xFF0A1810).withValues(alpha: 0.85),
+        ],
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+      ),
+    },
+    {
+      'title': 'Agri-Expert',
+      'icon': Icons.psychology,
+      'bgImage': 'assets/images/crop1.jpg',
+      'glowColor': const Color(0xFF64B5F6),
+      'activeGradient': const LinearGradient(
+        colors: [Color(0xFF0D47A1), Color(0xFF1565C0), Color(0xFF2196F3)],
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+      ),
+      'inactiveGradient': LinearGradient(
+        colors: [
+          const Color(0xFF13283F).withValues(alpha: 0.85),
+          const Color(0xFF091420).withValues(alpha: 0.85),
+        ],
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+      ),
+    },
+    {
+      'title': 'Buyer',
+      'icon': Icons.shopping_cart,
+      'bgImage': 'assets/images/crop3.jpg',
+      'glowColor': const Color(0xFFFFB74D),
+      'activeGradient': const LinearGradient(
+        colors: [Color(0xFFE65100), Color(0xFFF57C00), Color(0xFFFF9800)],
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+      ),
+      'inactiveGradient': LinearGradient(
+        colors: [
+          const Color(0xFF2C1E14).withValues(alpha: 0.85),
+          const Color(0xFF18100A).withValues(alpha: 0.85),
+        ],
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+      ),
+    },
+    {
+      'title': 'Government Officials',
+      'icon': Icons.favorite,
+      'bgImage': 'assets/images/crop2.jpg',
+      'glowColor': const Color(0xFF4DB6AC),
+      'activeGradient': const LinearGradient(
+        colors: [Color(0xFF004D40), Color(0xFF00695C), Color(0xFF009688)],
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+      ),
+      'inactiveGradient': LinearGradient(
+        colors: [
+          const Color(0xFF0F2624).withValues(alpha: 0.85),
+          const Color(0xFF081413).withValues(alpha: 0.85),
+        ],
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+      ),
+    },
   ];
 
   @override
@@ -138,6 +208,11 @@ class _ChoosePathScreenState extends State<ChoosePathScreen>
               ],
             ),
           ),
+
+          // 4. Smooth Transition Overlay
+          Positioned.fill(
+            child: _buildTransitionOverlay(),
+          ),
         ],
       ),
     );
@@ -175,7 +250,7 @@ class _ChoosePathScreenState extends State<ChoosePathScreen>
               ),
             ],
           ),
-          // Profile Avatar with Notification Badge & Secure Admin Gateway
+          // Secure Admin Gateway
           Row(
             children: [
               GestureDetector(
@@ -190,59 +265,12 @@ class _ChoosePathScreenState extends State<ChoosePathScreen>
                 child: Container(
                   width: 40,
                   height: 40,
-                  margin: const EdgeInsets.only(right: 12),
                   decoration: const BoxDecoration(
                     color: Color(0xFF273647), // surface-container-highest
                     shape: BoxShape.circle,
                   ),
                   child: Icon(Icons.security, color: primaryColor, size: 20),
                 ),
-              ),
-              Stack(
-                clipBehavior: Clip.none,
-                children: [
-                  Container(
-                    width: 40,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: const Color(
-                          0xFF73FE80,
-                        ).withValues(alpha: 0.2), // primary-fixed
-                        width: 2,
-                      ),
-                      image: const DecorationImage(
-                        image: NetworkImage(
-                          'https://picsum.photos/200', // Placeholder image
-                        ),
-                        fit: BoxFit.cover,
-                      ),
-                    ),
-                  ),
-                  Positioned(
-                    top: -4,
-                    right: -4,
-                    child: Container(
-                      width: 16,
-                      height: 16,
-                      decoration: BoxDecoration(
-                        color: errorColor,
-                        shape: BoxShape.circle,
-                      ),
-                      child: Center(
-                        child: Text(
-                          '8',
-                          style: GoogleFonts.plusJakartaSans(
-                            fontSize: 10,
-                            fontWeight: FontWeight.bold,
-                            color: onErrorColor,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
               ),
             ],
           ),
@@ -291,111 +319,51 @@ class _ChoosePathScreenState extends State<ChoosePathScreen>
         final role = _roles[index];
         final isActive = _selectedIndex == index;
 
-        return GestureDetector(
+        return RoleCard(
+          title: role['title'] as String,
+          icon: role['icon'] as IconData,
+          isActive: isActive,
+          bgImage: role['bgImage'] as String,
+          activeGradient: role['activeGradient'] as Gradient,
+          inactiveGradient: role['inactiveGradient'] as Gradient,
+          glowColor: role['glowColor'] as Color,
           onTap: () {
             setState(() {
               _selectedIndex = index;
             });
           },
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 300),
-            curve: Curves.easeOutCubic,
-            decoration: BoxDecoration(
-              color: isActive ? cardActive : Colors.transparent,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                color:
-                    isActive
-                        ? primaryColor
-                        : Colors.white.withValues(alpha: 0.05),
-                width: isActive ? 2 : 1,
-              ),
-              boxShadow:
-                  isActive
-                      ? [
-                        BoxShadow(
-                          color: primaryColor.withValues(alpha: 0.15),
-                          blurRadius: 32,
-                          offset: const Offset(0, 12),
-                        ),
-                      ]
-                      : [],
-            ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(16),
-              child: BackdropFilter(
-                filter: ImageFilter.blur(
-                  sigmaX: isActive ? 0 : 20,
-                  sigmaY: isActive ? 0 : 20,
-                ),
-                child: Container(
-                  color: isActive ? Colors.transparent : cardGlass,
-                  child: Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      // Active Glow Background effect
-                      if (isActive)
-                        Positioned(
-                          top: -30,
-                          right: -30,
-                          child: AnimatedContainer(
-                            duration: const Duration(seconds: 1),
-                            width: 100,
-                            height: 100,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: primaryColor.withValues(alpha: 0.1),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: primaryColor.withValues(alpha: 0.2),
-                                  blurRadius: 40,
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      // Card Content
-                      Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          AnimatedContainer(
-                            duration: const Duration(milliseconds: 300),
-                            width: 48,
-                            height: 48,
-                            decoration: BoxDecoration(
-                              color:
-                                  isActive
-                                      ? primaryColor.withValues(alpha: 0.2)
-                                      : onSurfaceVariant.withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Icon(
-                              role['icon'] as IconData,
-                              color: isActive ? primaryColor : onSurfaceVariant,
-                              size: 28,
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-                          AnimatedDefaultTextStyle(
-                            duration: const Duration(milliseconds: 300),
-                            style: GoogleFonts.plusJakartaSans(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w600,
-                              color: isActive ? primaryColor : onSurface,
-                            ),
-                            child: Text(role['title'] as String),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ),
         );
       },
     );
+  }
+
+  void _startTransitionAndNavigate(Widget targetScreen) async {
+    setState(() {
+      _transitioningRoleIndex = _selectedIndex;
+    });
+
+    // Millisecond delay for the smooth role-based animated transition screen
+    await Future.delayed(const Duration(milliseconds: 1200));
+
+    if (mounted) {
+      Navigator.push(
+        context,
+        PageRouteBuilder(
+          pageBuilder: (context, anim, secAnim) => targetScreen,
+          transitionsBuilder: (context, anim, secAnim, child) =>
+              FadeTransition(opacity: anim, child: child),
+        ),
+      );
+
+      // Dismiss transition overlay shortly after navigation
+      Future.delayed(const Duration(milliseconds: 500), () {
+        if (mounted) {
+          setState(() {
+            _transitioningRoleIndex = null;
+          });
+        }
+      });
+    }
   }
 
   Widget _buildActionButtons() {
@@ -420,69 +388,13 @@ class _ChoosePathScreenState extends State<ChoosePathScreen>
                 child: OutlinedButton(
                   onPressed: () {
                     if (_selectedIndex == 0) {
-                      // Redirect to Farmer Login
-                      Navigator.push(
-                        context,
-                        PageRouteBuilder(
-                          pageBuilder:
-                              (context, anim, secAnim) =>
-                                  const FarmerLoginScreen(),
-                          transitionsBuilder:
-                              (context, anim, secAnim, child) =>
-                                  FadeTransition(opacity: anim, child: child),
-                        ),
-                      );
+                      _startTransitionAndNavigate(const FarmerLoginScreen());
                     } else if (_selectedIndex == 1) {
-                      // Redirect to Agri-Expert Login
-                      Navigator.push(
-                        context,
-                        PageRouteBuilder(
-                          pageBuilder:
-                              (context, anim, secAnim) =>
-                                  const ExpertLoginScreen(),
-                          transitionsBuilder:
-                              (context, anim, secAnim, child) =>
-                                  FadeTransition(opacity: anim, child: child),
-                        ),
-                      );
+                      _startTransitionAndNavigate(const ExpertLoginScreen());
                     } else if (_selectedIndex == 2) {
-                      // Redirect to Buyer Login
-                      Navigator.push(
-                        context,
-                        PageRouteBuilder(
-                          pageBuilder:
-                              (context, anim, secAnim) =>
-                                  const BuyerLoginScreen(),
-                          transitionsBuilder:
-                              (context, anim, secAnim, child) =>
-                                  FadeTransition(opacity: anim, child: child),
-                        ),
-                      );
+                      _startTransitionAndNavigate(const BuyerLoginScreen());
                     } else if (_selectedIndex == 3) {
-                      // Redirect to NGO Login
-                      Navigator.push(
-                        context,
-                        PageRouteBuilder(
-                          pageBuilder:
-                              (context, anim, secAnim) =>
-                                  const NgoLoginScreen(),
-                          transitionsBuilder:
-                              (context, anim, secAnim, child) =>
-                                  FadeTransition(opacity: anim, child: child),
-                        ),
-                      );
-                    } else {
-                      // Fallback for Buyer/NGO
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(
-                            'Login for ${_roles[_selectedIndex]['title']} coming soon.',
-                          ),
-                          backgroundColor: const Color(
-                            0xFF1F2222,
-                          ).withValues(alpha: 0.7),
-                        ),
-                      );
+                      _startTransitionAndNavigate(const NgoLoginScreen());
                     }
                   },
                   style: OutlinedButton.styleFrom(
@@ -508,99 +420,14 @@ class _ChoosePathScreenState extends State<ChoosePathScreen>
               Expanded(
                 child: ElevatedButton(
                   onPressed: () {
-                    // Check if Farmer (index 0) is selected
                     if (_selectedIndex == 0) {
-                      Navigator.push(
-                        context,
-                        PageRouteBuilder(
-                          pageBuilder:
-                              (context, animation, secondaryAnimation) =>
-                                  const FarmerSignupScreen(),
-                          transitionsBuilder: (
-                            context,
-                            animation,
-                            secondaryAnimation,
-                            child,
-                          ) {
-                            return FadeTransition(
-                              opacity: animation,
-                              child: child,
-                            );
-                          },
-                        ),
-                      );
-                    }
-                    // Add this block to route to the Agri-Expert Signup (index 1)
-                    else if (_selectedIndex == 1) {
-                      Navigator.push(
-                        context,
-                        PageRouteBuilder(
-                          pageBuilder:
-                              (context, animation, secondaryAnimation) =>
-                                  const ExpertSignupScreen(),
-                          transitionsBuilder: (
-                            context,
-                            animation,
-                            secondaryAnimation,
-                            child,
-                          ) {
-                            return FadeTransition(
-                              opacity: animation,
-                              child: child,
-                            );
-                          },
-                        ),
-                      );
+                      _startTransitionAndNavigate(const FarmerSignupScreen());
+                    } else if (_selectedIndex == 1) {
+                      _startTransitionAndNavigate(const ExpertSignupScreen());
                     } else if (_selectedIndex == 2) {
-                      Navigator.push(
-                        context,
-                        PageRouteBuilder(
-                          pageBuilder:
-                              (context, animation, secondaryAnimation) =>
-                                  const BuyerSignupScreen(),
-                          transitionsBuilder: (
-                            context,
-                            animation,
-                            secondaryAnimation,
-                            child,
-                          ) {
-                            return FadeTransition(
-                              opacity: animation,
-                              child: child,
-                            );
-                          },
-                        ),
-                      );
+                      _startTransitionAndNavigate(const BuyerSignupScreen());
                     } else if (_selectedIndex == 3) {
-                      Navigator.push(
-                        context,
-                        PageRouteBuilder(
-                          pageBuilder:
-                              (context, animation, secondaryAnimation) =>
-                                  const NgoSignupScreen(),
-                          transitionsBuilder: (
-                            context,
-                            animation,
-                            secondaryAnimation,
-                            child,
-                          ) {
-                            return FadeTransition(
-                              opacity: animation,
-                              child: child,
-                            );
-                          },
-                        ),
-                      );
-                    } else {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(
-                            'Registration for ${_roles[_selectedIndex]['title']} coming soon.',
-                          ),
-                          backgroundColor:
-                              cardGlass, // Ensure cardGlass is defined in your state
-                        ),
-                      );
+                      _startTransitionAndNavigate(const NgoSignupScreen());
                     }
                   },
                   style: ElevatedButton.styleFrom(
@@ -628,6 +455,152 @@ class _ChoosePathScreenState extends State<ChoosePathScreen>
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildTransitionOverlay() {
+    if (_transitioningRoleIndex == null) return const SizedBox.shrink();
+
+    final role = _roles[_transitioningRoleIndex!];
+    final String title = role['title'];
+
+    Color themeColor;
+    List<IconData> floatIcons;
+    String statusText;
+    IconData centerIcon;
+
+    switch (_transitioningRoleIndex) {
+      case 0: // Farmer
+        themeColor = const Color(0xFF54E167);
+        floatIcons = [Icons.eco, Icons.grass, Icons.nature, Icons.nature_people, Icons.wb_sunny];
+        statusText = "Entering precision green fields...";
+        centerIcon = Icons.agriculture;
+        break;
+      case 1: // Agri-Expert
+        themeColor = const Color(0xFF64B5F6);
+        floatIcons = [Icons.science, Icons.biotech, Icons.auto_awesome, Icons.psychology, Icons.insights];
+        statusText = "Initiating expert environment diagnostics...";
+        centerIcon = Icons.psychology;
+        break;
+      case 2: // Buyer
+        themeColor = const Color(0xFFFFB74D);
+        floatIcons = [Icons.shopping_bag, Icons.storefront, Icons.monetization_on, Icons.currency_lira, Icons.local_shipping];
+        statusText = "Connecting to B2B Mokam markets...";
+        centerIcon = Icons.shopping_cart;
+        break;
+      default: // NGO / Officials
+        themeColor = const Color(0xFF4DB6AC);
+        floatIcons = [Icons.favorite, Icons.handshake, Icons.security, Icons.people, Icons.account_balance];
+        statusText = "Accessing administrative portal...";
+        centerIcon = Icons.favorite;
+        break;
+    }
+
+    return TweenAnimationBuilder<double>(
+      tween: Tween<double>(begin: 0.0, end: 1.0),
+      duration: const Duration(milliseconds: 300),
+      builder: (context, val, child) {
+        return Opacity(
+          opacity: val,
+          child: Container(
+            color: backgroundDeep.withValues(alpha: 0.95),
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 16 * val, sigmaY: 16 * val),
+              child: Stack(
+                children: [
+                  ...List.generate(15, (index) {
+                    final randomIcon = floatIcons[index % floatIcons.length];
+                    final randomLeft = (index * 27) % 360 + 20.0;
+                    return TweenAnimationBuilder<double>(
+                      tween: Tween<double>(begin: 800.0, end: -100.0),
+                      duration: Duration(milliseconds: 1000 + (index * 80)),
+                      builder: (context, yVal, child) {
+                        return Positioned(
+                          left: randomLeft,
+                          top: yVal,
+                          child: Opacity(
+                            opacity: 0.15,
+                            child: Icon(
+                              randomIcon,
+                              color: themeColor,
+                              size: 24 + (index % 3) * 8.0,
+                            ),
+                          ),
+                        );
+                      },
+                    );
+                  }),
+                  Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        TweenAnimationBuilder<double>(
+                          tween: Tween<double>(begin: 0.5, end: 1.0),
+                          duration: const Duration(milliseconds: 600),
+                          curve: Curves.elasticOut,
+                          builder: (context, scale, child) {
+                            return Transform.scale(
+                              scale: scale,
+                              child: Container(
+                                padding: const EdgeInsets.all(28),
+                                decoration: BoxDecoration(
+                                  color: themeColor.withValues(alpha: 0.1),
+                                  shape: BoxShape.circle,
+                                  border: Border.all(color: themeColor.withValues(alpha: 0.3), width: 2),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: themeColor.withValues(alpha: 0.2),
+                                      blurRadius: 40,
+                                      spreadRadius: 4,
+                                    ),
+                                  ],
+                                ),
+                                child: Icon(
+                                  centerIcon,
+                                  color: themeColor,
+                                  size: 64,
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                        const SizedBox(height: 32),
+                        Text(
+                          title.toUpperCase(),
+                          style: GoogleFonts.plusJakartaSans(
+                            color: Colors.white,
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 2.0,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          statusText,
+                          style: GoogleFonts.plusJakartaSans(
+                            color: onSurfaceVariant,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+                        const SizedBox(
+                          width: 40,
+                          height: 40,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 3,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 }
@@ -671,4 +644,278 @@ class ParticlePainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
+}
+
+// --- Custom Animated Role Selection Card ---
+
+class RoleCard extends StatefulWidget {
+  final String title;
+  final IconData icon;
+  final bool isActive;
+  final VoidCallback onTap;
+  final String bgImage;
+  final Gradient activeGradient;
+  final Gradient inactiveGradient;
+  final Color glowColor;
+
+  const RoleCard({
+    super.key,
+    required this.title,
+    required this.icon,
+    required this.isActive,
+    required this.onTap,
+    required this.bgImage,
+    required this.activeGradient,
+    required this.inactiveGradient,
+    required this.glowColor,
+  });
+
+  @override
+  State<RoleCard> createState() => _RoleCardState();
+}
+
+class _RoleCardState extends State<RoleCard> with TickerProviderStateMixin {
+  late AnimationController _floatController;
+  late AnimationController _shineController;
+  bool _isPressed = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _floatController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 3),
+    );
+
+    _shineController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 2500),
+    );
+
+    if (widget.isActive) {
+      _floatController.repeat(reverse: true);
+      _shineController.repeat();
+    }
+  }
+
+  @override
+  void didUpdateWidget(covariant RoleCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.isActive != oldWidget.isActive) {
+      if (widget.isActive) {
+        _floatController.repeat(reverse: true);
+        _shineController.repeat();
+      } else {
+        _floatController.stop();
+        _floatController.reset();
+        _shineController.stop();
+        _shineController.reset();
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _floatController.dispose();
+    _shineController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final double scale = _isPressed ? 0.96 : (widget.isActive ? 1.04 : 1.0);
+
+    return GestureDetector(
+      onTapDown: (_) => setState(() => _isPressed = true),
+      onTapUp: (_) {
+        setState(() => _isPressed = false);
+        widget.onTap();
+      },
+      onTapCancel: () => setState(() => _isPressed = false),
+      child: AnimatedScale(
+        scale: scale,
+        duration: const Duration(milliseconds: 150),
+        curve: Curves.easeOutBack,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 400),
+          curve: Curves.easeInOut,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: widget.isActive
+                  ? widget.glowColor
+                  : Colors.white.withValues(alpha: 0.1),
+              width: widget.isActive ? 2.5 : 1.0,
+            ),
+            boxShadow: widget.isActive
+                ? [
+                    BoxShadow(
+                      color: widget.glowColor.withValues(alpha: 0.35),
+                      blurRadius: 25,
+                      spreadRadius: 2,
+                      offset: const Offset(0, 8),
+                    ),
+                  ]
+                : [],
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(18),
+            child: Stack(
+              children: [
+                // 1. Background Image Layer
+                Positioned.fill(
+                  child: AnimatedOpacity(
+                    duration: const Duration(milliseconds: 400),
+                    opacity: widget.isActive ? 0.35 : 0.15,
+                    child: Image.asset(
+                      widget.bgImage,
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                ),
+
+                // 2. Color Gradient Overlay Layer
+                Positioned.fill(
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 400),
+                    decoration: BoxDecoration(
+                      gradient: widget.isActive
+                          ? widget.activeGradient
+                          : widget.inactiveGradient,
+                    ),
+                  ),
+                ),
+
+                // 3. Animated Shine Sweep Layer
+                if (widget.isActive)
+                  Positioned.fill(
+                    child: AnimatedBuilder(
+                      animation: _shineController,
+                      builder: (context, child) {
+                        return CustomPaint(
+                          painter: ShinePainter(
+                            progress: _shineController.value,
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+
+                // 4. Content Layer (gently floats, centered exactly)
+                Positioned.fill(
+                  child: AnimatedBuilder(
+                    animation: _floatController,
+                    builder: (context, child) {
+                      final double floatOffset = widget.isActive
+                          ? sin(_floatController.value * 2 * pi) * 4.0
+                          : 0.0;
+                      return Transform.translate(
+                        offset: Offset(0, floatOffset),
+                        child: child,
+                      );
+                    },
+                    child: Center(
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            // Icon with breathing container and active scale
+                            AnimatedContainer(
+                              duration: const Duration(milliseconds: 400),
+                              width: 56,
+                              height: 56,
+                              decoration: BoxDecoration(
+                                color: widget.isActive
+                                    ? Colors.white.withValues(alpha: 0.2)
+                                    : Colors.white.withValues(alpha: 0.08),
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: widget.isActive
+                                      ? Colors.white.withValues(alpha: 0.4)
+                                      : Colors.transparent,
+                                  width: 1.5,
+                                ),
+                                boxShadow: widget.isActive
+                                    ? [
+                                        BoxShadow(
+                                          color: Colors.white.withValues(alpha: 0.1),
+                                          blurRadius: 10,
+                                          spreadRadius: 1,
+                                        )
+                                      ]
+                                    : [],
+                              ),
+                              child: Icon(
+                                widget.icon,
+                                color: Colors.white,
+                                size: 30,
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            // Title
+                            Text(
+                              widget.title,
+                              textAlign: TextAlign.center,
+                              style: GoogleFonts.plusJakartaSans(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w700,
+                                color: Colors.white,
+                                letterSpacing: 0.5,
+                                shadows: [
+                                  Shadow(
+                                    color: Colors.black.withValues(alpha: 0.5),
+                                    offset: const Offset(0, 2),
+                                    blurRadius: 4,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class ShinePainter extends CustomPainter {
+  final double progress;
+
+  ShinePainter({required this.progress});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final double width = size.width;
+    final double height = size.height;
+    final double currentX = -width + (progress * width * 3);
+
+    final paint = Paint()
+      ..shader = LinearGradient(
+        colors: [
+          Colors.white.withValues(alpha: 0.0),
+          Colors.white.withValues(alpha: 0.05),
+          Colors.white.withValues(alpha: 0.25),
+          Colors.white.withValues(alpha: 0.05),
+          Colors.white.withValues(alpha: 0.0),
+        ],
+        stops: const [0.0, 0.35, 0.5, 0.65, 1.0],
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+      ).createShader(Rect.fromLTWH(currentX, 0, width, height));
+
+    canvas.drawRect(Rect.fromLTWH(0, 0, width, height), paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant ShinePainter oldDelegate) =>
+      oldDelegate.progress != progress;
 }

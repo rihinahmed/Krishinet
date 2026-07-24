@@ -74,7 +74,7 @@ class _GovtPortalScreenState extends State<GovtPortalScreen> {
         isAvailable: true,
       ),
       Officer(
-        name: 'Prof. Alok Nath',
+        name: 'Prof. Abdus Sobhan',
         title: 'Soil Science Policy Advisor',
         department: 'Soil Research Council',
         imageUrl:

@@ -1,14 +1,14 @@
-import 'dart:io';
 import 'dart:ui';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'choose_path_screen.dart';
+import 'core/utils/constants.dart';
 
 void main() {
   runApp(const KrishinetApp());
 }
 
+//save
 class KrishinetApp extends StatelessWidget {
   const KrishinetApp({super.key});
 
@@ -82,7 +82,7 @@ class _LandingScreenState extends State<LandingScreen>
           // 1. Immersive Background Image
           Positioned.fill(
             child:
-                (!kIsWeb && Platform.environment.containsKey('FLUTTER_TEST'))
+                AppConstants.isTesting
                     ? Container(color: const Color(0xFF051424))
                     : Image.asset('assets/images/bgimg.jpg', fit: BoxFit.cover),
           ),
