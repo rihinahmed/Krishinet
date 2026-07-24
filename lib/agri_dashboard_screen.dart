@@ -1,6 +1,9 @@
 import 'dart:math' as math;
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:pdf/pdf.dart';
+import 'package:pdf/widgets.dart' as pw;
+import 'package:printing/printing.dart';
 import 'core/utils/constants.dart';
 import 'expert_profile_screen.dart';
 import 'expert_chat_screen.dart';
@@ -121,8 +124,6 @@ class _KrishinetDashboardState extends State<KrishinetDashboard> {
               ),
               sliver: SliverList(
                 delegate: SliverChildListDelegate([
-                  const ImpactAnalyticsSection(),
-                  const SizedBox(height: 32),
                   const ExpertToolkitSection(),
                   const SizedBox(height: 32),
                   UpcomingAppointmentsSection(
@@ -469,11 +470,7 @@ class ExpertToolkitSection extends StatefulWidget {
 
 class _ExpertToolkitSectionState extends State<ExpertToolkitSection> {
   // Form controllers / mock data states
-  final List<Map<String, dynamic>> _mockLivestockRecords = [
-    {'id': 'LIV-4012', 'type': 'Cow (Friesian)', 'age': '2.5 years', 'status': 'Healthy', 'owner': 'Karim Miah', 'vax': 'FMD, Anthrax'},
-    {'id': 'LIV-8821', 'type': 'Goat (Black Bengal)', 'age': '1.2 years', 'status': 'Under Treatment', 'owner': 'Rihin Farmer', 'vax': 'PPR'},
-    {'id': 'LIV-1092', 'type': 'Buffalo', 'age': '4.0 years', 'status': 'Healthy', 'owner': 'Mitu Khatun', 'vax': 'FMD'},
-  ];
+
 
   final List<Map<String, dynamic>> _mockSoilRecords = [
     {'plot': 'Plot #09', 'owner': 'Kalam Miah', 'ph': '6.4', 'npk': 'N: Low, P: Med, K: High', 'crop': 'Boro Paddy'},
@@ -498,12 +495,144 @@ class _ExpertToolkitSectionState extends State<ExpertToolkitSection> {
   }
 
   // --- 1. Animal Consultation Sheet ---
+  final List<Map<String, String>> _registeredFarmers = [
+    {'name': 'Karim Miah', 'phone': '01712345678'},
+    {'name': 'Rihin Farmer', 'phone': '01812345678'},
+    {'name': 'Mitu Khatun', 'phone': '01912345678'},
+    {'name': 'Kalam Miah', 'phone': '01511223344'},
+    {'name': 'Sufia Begum', 'phone': '01655667788'},
+    {'name': 'Jashim Uddin', 'phone': '01799887766'},
+    {'name': 'Jalal Ahmed', 'phone': '01833445566'},
+  ];
+
+  Future<void> _generatePrescriptionPdf({
+    required String farmerName,
+    required String farmerPhone,
+    required String animal,
+    required String temp,
+    required String heartRate,
+    required List<Map<String, String>> extraVitals,
+    required String solution,
+  }) async {
+    final pdf = pw.Document();
+
+    pdf.addPage(
+      pw.Page(
+        pageFormat: PdfPageFormat.a4,
+        build: (pw.Context context) {
+          return pw.Padding(
+            padding: const pw.EdgeInsets.all(32),
+            child: pw.Column(
+              crossAxisAlignment: pw.CrossAxisAlignment.start,
+              children: [
+                pw.Row(
+                  mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                  children: [
+                    pw.Column(
+                      crossAxisAlignment: pw.CrossAxisAlignment.start,
+                      children: [
+                        pw.Text("KRISHINET PRESCRIPTION", style: pw.TextStyle(fontSize: 24, fontWeight: pw.FontWeight.bold, color: PdfColor.fromHex("#006d24"))),
+                        pw.Text("Agri-Expert Consultation Services", style: pw.TextStyle(fontSize: 12, color: PdfColors.grey700)),
+                      ],
+                    ),
+                    pw.Text(
+                      "${DateTime.now().year}-${DateTime.now().month.toString().padLeft(2, '0')}-${DateTime.now().day.toString().padLeft(2, '0')}",
+                      style: pw.TextStyle(fontSize: 12, fontWeight: pw.FontWeight.bold),
+                    ),
+                  ],
+                ),
+                pw.Divider(thickness: 2, color: PdfColor.fromHex("#006d24")),
+                pw.SizedBox(height: 20),
+
+                pw.Text("Patient & Client Information", style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold)),
+                pw.SizedBox(height: 8),
+                pw.Table(
+                  border: pw.TableBorder.all(color: PdfColors.grey300),
+                  children: [
+                    pw.TableRow(children: [
+                      pw.Padding(padding: const pw.EdgeInsets.all(8), child: pw.Text("Farmer Name", style: pw.TextStyle(fontWeight: pw.FontWeight.bold))),
+                      pw.Padding(padding: const pw.EdgeInsets.all(8), child: pw.Text(farmerName)),
+                    ]),
+                    pw.TableRow(children: [
+                      pw.Padding(padding: const pw.EdgeInsets.all(8), child: pw.Text("Farmer Phone", style: pw.TextStyle(fontWeight: pw.FontWeight.bold))),
+                      pw.Padding(padding: const pw.EdgeInsets.all(8), child: pw.Text(farmerPhone)),
+                    ]),
+                    pw.TableRow(children: [
+                      pw.Padding(padding: const pw.EdgeInsets.all(8), child: pw.Text("Animal Type", style: pw.TextStyle(fontWeight: pw.FontWeight.bold))),
+                      pw.Padding(padding: const pw.EdgeInsets.all(8), child: pw.Text(animal)),
+                    ]),
+                  ],
+                ),
+                pw.SizedBox(height: 20),
+
+                pw.Text("Vital Measurements", style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold)),
+                pw.SizedBox(height: 8),
+                pw.Table(
+                  border: pw.TableBorder.all(color: PdfColors.grey300),
+                  children: [
+                    pw.TableRow(children: [
+                      pw.Padding(padding: const pw.EdgeInsets.all(8), child: pw.Text("Body Temp (°F)", style: pw.TextStyle(fontWeight: pw.FontWeight.bold))),
+                      pw.Padding(padding: const pw.EdgeInsets.all(8), child: pw.Text(temp)),
+                    ]),
+                    pw.TableRow(children: [
+                      pw.Padding(padding: const pw.EdgeInsets.all(8), child: pw.Text("Heart Rate (BPM)", style: pw.TextStyle(fontWeight: pw.FontWeight.bold))),
+                      pw.Padding(padding: const pw.EdgeInsets.all(8), child: pw.Text(heartRate)),
+                    ]),
+                    ...extraVitals.map((v) => pw.TableRow(children: [
+                      pw.Padding(padding: const pw.EdgeInsets.all(8), child: pw.Text(v['name']!, style: pw.TextStyle(fontWeight: pw.FontWeight.bold))),
+                      pw.Padding(padding: const pw.EdgeInsets.all(8), child: pw.Text(v['value']!)),
+                    ])),
+                  ],
+                ),
+                pw.SizedBox(height: 20),
+
+                pw.Text("Provided Solution / Prescription Notes", style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold)),
+                pw.SizedBox(height: 8),
+                pw.Container(
+                  width: double.infinity,
+                  padding: const pw.EdgeInsets.all(12),
+                  decoration: pw.BoxDecoration(
+                    border: pw.Border.all(color: PdfColors.grey400),
+                    borderRadius: const pw.BorderRadius.all(pw.Radius.circular(4)),
+                  ),
+                  child: pw.Text(
+                    solution.isNotEmpty ? solution : "No prescription notes entered.",
+                    style: const pw.TextStyle(fontSize: 12),
+                  ),
+                ),
+
+                pw.Spacer(),
+                pw.Divider(color: PdfColors.grey300),
+                pw.Row(
+                  mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                  children: [
+                    pw.Text("Generated via Krishinet Expert Portal", style: pw.TextStyle(fontSize: 10, color: PdfColors.grey600)),
+                    pw.Text("Signature of Authorized Expert", style: pw.TextStyle(fontSize: 10, color: PdfColors.grey600)),
+                  ],
+                ),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+
+    await Printing.layoutPdf(
+      onLayout: (PdfPageFormat format) async => pdf.save(),
+      name: "prescription_${farmerName.replaceAll(' ', '_')}.pdf",
+    );
+  }
+
   void _animalConsultationSheet() {
     String selectedAnimal = 'Cow';
+    final List<String> animalOptions = ['Cow', 'Goat', 'Sheep', 'Buffalo', 'Poultry'];
     final symCtrl = TextEditingController();
     final tempCtrl = TextEditingController(text: '101.5');
     final heartCtrl = TextEditingController(text: '65');
-    
+    final solutionCtrl = TextEditingController();
+    final List<Map<String, dynamic>> extraMeasurements = [];
+    TextEditingController? farmerFieldCtrl;
+
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
@@ -511,34 +640,253 @@ class _ExpertToolkitSectionState extends State<ExpertToolkitSection> {
       builder: (context) {
         return StatefulBuilder(
           builder: (context, setModalState) {
-            return _bottomSheetContainer(
-              title: "Provide Animal Health Consultation",
-              icon: Icons.pets,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildDropdownField(
-                    label: "Select Animal Type",
-                    value: selectedAnimal,
-                    items: ['Cow', 'Goat', 'Sheep', 'Buffalo', 'Poultry'],
-                    onChanged: (val) => setModalState(() => selectedAnimal = val!),
-                  ),
-                  const SizedBox(height: 12),
-                  _buildTextField("Observed Symptoms", symCtrl, placeholder: "e.g. fever, loss of appetite, coughing"),
-                  const SizedBox(height: 12),
-                  Row(
+            return Padding(
+              padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+              child: SingleChildScrollView(
+                child: _bottomSheetContainer(
+                  title: "Provide Animal Health Consultation",
+                  icon: Icons.pets,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Expanded(child: _buildTextField("Body Temp (°F)", tempCtrl, keyboardType: TextInputType.number)),
-                      const SizedBox(width: 12),
-                      Expanded(child: _buildTextField("Heart Rate (BPM)", heartCtrl, keyboardType: TextInputType.number)),
+                      Autocomplete<Map<String, String>>(
+                        optionsBuilder: (TextEditingValue textEditingValue) {
+                          if (textEditingValue.text.isEmpty) {
+                            return const Iterable<Map<String, String>>.empty();
+                          }
+                          return _registeredFarmers.where((Map<String, String> option) {
+                            return option['name']!.toLowerCase().contains(textEditingValue.text.toLowerCase()) ||
+                                option['phone']!.contains(textEditingValue.text);
+                          });
+                        },
+                        displayStringForOption: (Map<String, String> option) => "${option['name']} (${option['phone']})",
+                        fieldViewBuilder: (context, controller, focusNode, onFieldSubmitted) {
+                          farmerFieldCtrl = controller;
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                "Registered Farmer Name/Number",
+                                style: TextStyle(color: AppColors.onSurfaceVariant, fontSize: 12, fontWeight: FontWeight.bold),
+                              ),
+                              const SizedBox(height: 6),
+                              TextField(
+                                controller: controller,
+                                focusNode: focusNode,
+                                onSubmitted: (_) => onFieldSubmitted(),
+                                style: const TextStyle(color: Colors.white, fontSize: 13),
+                                decoration: InputDecoration(
+                                  hintText: "Enter name or phone number...",
+                                  hintStyle: const TextStyle(color: Colors.grey, fontSize: 13),
+                                  filled: true,
+                                  fillColor: AppColors.surfaceContainer,
+                                  contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide.none),
+                                ),
+                              ),
+                            ],
+                          );
+                        },
+                        optionsViewBuilder: (context, onSelected, options) {
+                          return Align(
+                            alignment: Alignment.topLeft,
+                            child: Material(
+                              elevation: 4.0,
+                              color: AppColors.surfaceContainerHigh,
+                              borderRadius: BorderRadius.circular(8),
+                              child: Container(
+                                width: MediaQuery.of(context).size.width - 48,
+                                constraints: const BoxConstraints(maxHeight: 200),
+                                child: ListView.builder(
+                                  padding: EdgeInsets.zero,
+                                  shrinkWrap: true,
+                                  itemCount: options.length,
+                                  itemBuilder: (BuildContext context, int index) {
+                                    final Map<String, String> option = options.elementAt(index);
+                                    return ListTile(
+                                      title: Text(option['name']!, style: const TextStyle(color: Colors.white, fontSize: 13)),
+                                      subtitle: Text(option['phone']!, style: const TextStyle(color: AppColors.onSurfaceVariant, fontSize: 11)),
+                                      onTap: () {
+                                        onSelected(option);
+                                      },
+                                    );
+                                  },
+                                ),
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                      const SizedBox(height: 12),
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Expanded(
+                            child: _buildDropdownField(
+                              label: "Select Animal Type",
+                              value: selectedAnimal,
+                              items: animalOptions,
+                              onChanged: (val) => setModalState(() => selectedAnimal = val!),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          IconButton(
+                            icon: const Icon(Icons.add_circle, color: AppColors.primary, size: 28),
+                            onPressed: () {
+                              showDialog(
+                                context: context,
+                                builder: (context) {
+                                  final newAnimalCtrl = TextEditingController();
+                                  return AlertDialog(
+                                    backgroundColor: AppColors.surfaceContainerHigh,
+                                    title: const Text("Add New Animal", style: TextStyle(color: Colors.white)),
+                                    content: TextField(
+                                      controller: newAnimalCtrl,
+                                      style: const TextStyle(color: Colors.white),
+                                      decoration: const InputDecoration(
+                                        hintText: "Enter animal type (e.g. Rabbit)",
+                                        hintStyle: TextStyle(color: Colors.grey),
+                                      ),
+                                    ),
+                                    actions: [
+                                      TextButton(
+                                        onPressed: () => Navigator.pop(context),
+                                        child: const Text("Cancel", style: TextStyle(color: Colors.grey)),
+                                      ),
+                                      TextButton(
+                                        onPressed: () {
+                                          final name = newAnimalCtrl.text.trim();
+                                          if (name.isNotEmpty) {
+                                            setModalState(() {
+                                              if (!animalOptions.contains(name)) {
+                                                animalOptions.add(name);
+                                              }
+                                              selectedAnimal = name;
+                                            });
+                                          }
+                                          Navigator.pop(context);
+                                        },
+                                        child: const Text("Add", style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold)),
+                                      ),
+                                    ],
+                                  );
+                                },
+                              );
+                            },
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      _buildTextField("Observed Symptoms", symCtrl, placeholder: "e.g. fever, loss of appetite, coughing"),
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          Expanded(child: _buildTextField("Body Temp (°F)", tempCtrl, keyboardType: TextInputType.number)),
+                          const SizedBox(width: 12),
+                          Expanded(child: _buildTextField("Heart Rate (BPM)", heartCtrl, keyboardType: TextInputType.number)),
+                        ],
+                      ),
+                      ...extraMeasurements.map((m) => Padding(
+                        padding: const EdgeInsets.only(top: 12),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            Expanded(
+                              child: _buildTextField(m['label'] as String, m['controller'] as TextEditingController),
+                            ),
+                            const SizedBox(width: 8),
+                            IconButton(
+                              icon: const Icon(Icons.remove_circle, color: Colors.redAccent, size: 28),
+                              onPressed: () => setModalState(() => extraMeasurements.remove(m)),
+                            ),
+                          ],
+                        ),
+                      )),
+                      const SizedBox(height: 8),
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: TextButton.icon(
+                          onPressed: () {
+                            showDialog(
+                              context: context,
+                              builder: (context) {
+                                final labelCtrl = TextEditingController();
+                                return AlertDialog(
+                                  backgroundColor: AppColors.surfaceContainerHigh,
+                                  title: const Text("Add Vital Measurement Metric", style: TextStyle(color: Colors.white)),
+                                  content: TextField(
+                                    controller: labelCtrl,
+                                    style: const TextStyle(color: Colors.white),
+                                    decoration: const InputDecoration(
+                                      hintText: "Metric Name (e.g. Blood Pressure)",
+                                      hintStyle: TextStyle(color: Colors.grey),
+                                    ),
+                                  ),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () => Navigator.pop(context),
+                                      child: const Text("Cancel", style: TextStyle(color: Colors.grey)),
+                                    ),
+                                    TextButton(
+                                      onPressed: () {
+                                        final name = labelCtrl.text.trim();
+                                        if (name.isNotEmpty) {
+                                          setModalState(() {
+                                            extraMeasurements.add({
+                                              'label': name,
+                                              'controller': TextEditingController(),
+                                            });
+                                          });
+                                        }
+                                        Navigator.pop(context);
+                                      },
+                                      child: const Text("Add", style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold)),
+                                    ),
+                                  ],
+                                );
+                              },
+                            );
+                          },
+                          icon: const Icon(Icons.add_circle_outline, color: AppColors.primary),
+                          label: const Text("Add Vital Metric (e.g. Blood Pressure)", style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold, fontSize: 13)),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      _buildTextField("Provided Solution (Medicines & Solutions)", solutionCtrl, placeholder: "Enter medicines, dosages, and solutions...", maxLines: 3),
+                      const SizedBox(height: 20),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _buildSubmitButton("Generate PDF", () async {
+                              final fName = farmerFieldCtrl?.text.trim() ?? "Walk-in Farmer";
+                              final phoneMatch = _registeredFarmers.firstWhere((f) => fName.contains(f['name']!), orElse: () => {});
+                              final fPhone = phoneMatch['phone'] ?? "N/A";
+                              await _generatePrescriptionPdf(
+                                farmerName: fName,
+                                farmerPhone: fPhone,
+                                animal: selectedAnimal,
+                                temp: tempCtrl.text,
+                                heartRate: heartCtrl.text,
+                                extraVitals: extraMeasurements.map((m) => {
+                                  'name': m['label'] as String,
+                                  'value': (m['controller'] as TextEditingController).text,
+                                }).toList(),
+                                solution: solutionCtrl.text,
+                              );
+                            }, color: AppColors.surfaceContainerHigh),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: _buildSubmitButton("Send to Farmer", () {
+                              Navigator.pop(context);
+                              _showSuccess("Prescription successfully sent to farmer!");
+                            }),
+                          ),
+                        ],
+                      ),
                     ],
                   ),
-                  const SizedBox(height: 20),
-                  _buildSubmitButton("Generate Treatment Plan", () {
-                    Navigator.pop(context);
-                    _showSuccess("Consultation details saved. Diagnosis: Mild infection. Prescription sent to owner!");
-                  }),
-                ],
+                ),
               ),
             );
           },
@@ -716,39 +1064,7 @@ class _ExpertToolkitSectionState extends State<ExpertToolkitSection> {
     );
   }
 
-  // --- 4. Upload Prescription Sheet ---
-  void _uploadPrescriptionSheet() {
-    final fidCtrl = TextEditingController(text: "KM-2026-8913");
-    final rxCtrl = TextEditingController();
-    final dosageCtrl = TextEditingController(text: "2 tablets twice daily for 5 days");
 
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      isScrollControlled: true,
-      builder: (context) {
-        return _bottomSheetContainer(
-          title: "Upload Prescription & Advisory Notes",
-          icon: Icons.note_add,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildTextField("Farmer ID / Phone", fidCtrl),
-              const SizedBox(height: 12),
-              _buildTextField("Prescribed Medicines / Treatment", rxCtrl, placeholder: "e.g. Albendazole 600mg dewormer"),
-              const SizedBox(height: 12),
-              _buildTextField("Dosage & Directions", dosageCtrl),
-              const SizedBox(height: 20),
-              _buildSubmitButton("Send Prescription Note", () {
-                Navigator.pop(context);
-                _showSuccess("Prescription successfully sent to farmer ${fidCtrl.text} via SMS!");
-              }),
-            ],
-          ),
-        );
-      },
-    );
-  }
 
   // --- 5. Emergency Outbreak Sheet ---
   void _emergencyOutbreakSheet() {
@@ -936,90 +1252,7 @@ class _ExpertToolkitSectionState extends State<ExpertToolkitSection> {
     );
   }
 
-  // --- 8. Maintain Livestock Records Sheet ---
-  void _livestockRecordsSheet() {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      isScrollControlled: true,
-      builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setModalState) {
-            return _bottomSheetContainer(
-              title: "Livestock Health Records Ledger",
-              icon: Icons.history_edu,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  SizedBox(
-                    height: 220,
-                    child: ListView.builder(
-                      itemCount: _mockLivestockRecords.length,
-                      itemBuilder: (context, index) {
-                        final rec = _mockLivestockRecords[index];
-                        return Container(
-                          margin: const EdgeInsets.only(bottom: 10),
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: AppColors.surfaceContainerHigh,
-                            borderRadius: BorderRadius.circular(10),
-                            border: Border.all(color: AppColors.glassBorder),
-                          ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                  Text(rec['type']!, style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
-                                  const SizedBox(height: 4),
-                                  Text("Owner: ${rec['owner']} | Age: ${rec['age']}", style: const TextStyle(fontSize: 11, color: AppColors.onSurfaceVariant)),
-                                  Text("Vaccines: ${rec['vax']}", style: const TextStyle(fontSize: 10, color: AppColors.primary)),
-                                ],
-                              ),
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                decoration: BoxDecoration(
-                                  color: rec['status'] == 'Healthy' ? AppColors.primary.withValues(alpha: 0.15) : const Color(0xFFFF5252).withValues(alpha: 0.15),
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: Text(
-                                  rec['status']!,
-                                  style: TextStyle(
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.bold,
-                                    color: rec['status'] == 'Healthy' ? AppColors.primary : const Color(0xFFFF5252),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  _buildSubmitButton("Create New Livestock Profile", () {
-                    setModalState(() {
-                      _mockLivestockRecords.add({
-                        'id': 'LIV-${1000 + (DateTime.now().millisecondsSinceEpoch % 8999)}',
-                        'type': 'Goat (Jamunapari)',
-                        'age': '1.5 years',
-                        'status': 'Healthy',
-                        'owner': 'Jashim Uddin',
-                        'vax': 'PPR, Goat Pox'
-                      });
-                    });
-                    _showSuccess("Added Jamunapari profile to ledger!");
-                  }),
-                ],
-              ),
-            );
-          },
-        );
-      },
-    );
-  }
+
 
   // --- 9. Maintain Soil & Crop Records Sheet ---
   void _soilCropRecordsSheet() {
@@ -1433,66 +1666,7 @@ class _ExpertToolkitSectionState extends State<ExpertToolkitSection> {
     );
   }
 
-  // --- 15. Suggest Modern Farming Techniques Sheet ---
-  void _farmingTechniquesSheet() {
-    final List<Map<String, String>> techniques = [
-      {'title': 'Hydroponic Vegetable Grow systems', 'desc': 'Grow high-value capsicum and lettuce in nutrient solutions without soil. Saves 90% water and yields 3x faster.'},
-      {'title': 'Drip & Micro-Sprinkler Systems', 'desc': 'Precision fertilizer injection (fertigation) directly to the root zone via automated drip tubes.'},
-      {'title': 'Precision Drone NDVI Scanning', 'desc': 'Scan crop fields with multispectral cameras to identify nitrogen gaps before the visual yellowing occurs.'},
-      {'title': 'Integrated Pest Management (IPM)', 'desc': 'Use pheromone traps and yellow sticky boards instead of synthetic chemical sprays.'},
-    ];
 
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      isScrollControlled: true,
-      builder: (context) {
-        return _bottomSheetContainer(
-          title: "Suggest Modern Farming Techniques",
-          icon: Icons.lightbulb_outline,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              SizedBox(
-                height: 250,
-                child: ListView.builder(
-                  itemCount: techniques.length,
-                  itemBuilder: (context, index) {
-                    final tech = techniques[index];
-                    return Container(
-                      margin: const EdgeInsets.only(bottom: 10),
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: AppColors.surfaceContainerHigh,
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: AppColors.glassBorder),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              const Icon(Icons.stars, color: AppColors.primary, size: 16),
-                              const SizedBox(width: 6),
-                              Text(tech['title']!, style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 13)),
-                            ],
-                          ),
-                          const SizedBox(height: 6),
-                          Text(tech['desc']!, style: const TextStyle(fontSize: 11, height: 1.4, color: AppColors.onSurfaceVariant)),
-                        ],
-                      ),
-                    );
-                  },
-                ),
-              ),
-              const SizedBox(height: 12),
-              _buildSubmitButton("Close Guide", () => Navigator.pop(context)),
-            ],
-          ),
-        );
-      },
-    );
-  }
 
   // --- Shared Helper UI Builders ---
   Widget _bottomSheetContainer({required String title, required IconData icon, required Widget child}) {
@@ -1541,7 +1715,7 @@ class _ExpertToolkitSectionState extends State<ExpertToolkitSection> {
     );
   }
 
-  Widget _buildTextField(String label, TextEditingController controller, {String? placeholder, TextInputType keyboardType = TextInputType.text}) {
+  Widget _buildTextField(String label, TextEditingController controller, {String? placeholder, TextInputType keyboardType = TextInputType.text, int maxLines = 1}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -1550,6 +1724,7 @@ class _ExpertToolkitSectionState extends State<ExpertToolkitSection> {
         TextField(
           controller: controller,
           keyboardType: keyboardType,
+          maxLines: maxLines,
           style: const TextStyle(color: Colors.white, fontSize: 13),
           decoration: InputDecoration(
             hintText: placeholder,
@@ -1605,23 +1780,20 @@ class _ExpertToolkitSectionState extends State<ExpertToolkitSection> {
 
   @override
   Widget build(BuildContext context) {
-    // 15 toolkit items list
+    // 12 toolkit items list
     final List<Map<String, dynamic>> tools = [
       {'title': 'Animal Consultation', 'desc': 'Provide animal health consultation', 'icon': Icons.pets, 'action': _animalConsultationSheet},
       {'title': 'Disease Diagnosis', 'desc': 'Diagnose livestock & crop diseases', 'icon': Icons.biotech, 'action': _diseaseDiagnosisSheet},
       {'title': 'Vaccine Programs', 'desc': 'Schedule vaccination & training programs', 'icon': Icons.vaccines, 'action': _vaccineTrainingSheet},
-      {'title': 'Advisory Prescriptions', 'desc': 'Upload prescriptions & advisory notes', 'icon': Icons.note_add, 'action': _uploadPrescriptionSheet},
       {'title': 'Emergency Outbreaks', 'desc': 'Report emergency disease outbreaks', 'icon': Icons.warning_amber, 'action': _emergencyOutbreakSheet},
       {'title': 'Fertilizer & Feed Guide', 'desc': 'Recommend fertilizer & feed usage', 'icon': Icons.grass, 'action': _fertilizerFeedSheet},
       {'title': 'Farmer Workshops', 'desc': 'Conduct farmer training workshops', 'icon': Icons.co_present, 'action': _farmerWorkshopSheet},
-      {'title': 'Livestock Ledgers', 'desc': 'Maintain livestock health records', 'icon': Icons.history_edu, 'action': _livestockRecordsSheet},
       {'title': 'Soil & Crop Registry', 'desc': 'Maintain soil & crop records', 'icon': Icons.layers, 'action': _soilCropRecordsSheet},
       {'title': 'Pest Warning Alerts', 'desc': 'Offer pest outbreak alerts', 'icon': Icons.bug_report, 'action': _pestAlertSheet},
       {'title': 'Seasonal Crop Plans', 'desc': 'Provide seasonal crop planning advice', 'icon': Icons.calendar_view_month, 'action': _cropPlanningSheet},
       {'title': 'Soil Recommendations', 'desc': 'Deliver soil testing & recommendations', 'icon': Icons.science, 'action': _soilTestingSheet},
       {'title': 'Research Documents', 'desc': 'Upload research-based advisory docs', 'icon': Icons.cloud_upload, 'action': _uploadAdvisorySheet},
       {'title': 'Farmer Inbox Direct', 'desc': 'Respond to farmer queries directly', 'icon': Icons.question_answer, 'action': _farmerQueriesSheet},
-      {'title': 'Modern Tech Advice', 'desc': 'Suggest modern farming techniques', 'icon': Icons.lightbulb_outline, 'action': _farmingTechniquesSheet},
     ];
 
     return Column(
@@ -1648,33 +1820,89 @@ class _ExpertToolkitSectionState extends State<ExpertToolkitSection> {
           itemCount: tools.length,
           itemBuilder: (context, index) {
             final t = tools[index];
-            return GlassCard(
-              padding: const EdgeInsets.all(12),
-              onTap: t['action'] as VoidCallback,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Icon(t['icon'] as IconData, color: AppColors.primary, size: 24),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+            return Container(
+              decoration: BoxDecoration(
+                color: Color.lerp(AppColors.surfaceContainer, AppColors.primary, 0.05)!.withValues(alpha: 0.88),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: AppColors.primary.withValues(alpha: 0.35),
+                  width: 1.5,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppColors.primary.withValues(alpha: 0.12),
+                    blurRadius: 10,
+                    spreadRadius: 1,
+                  ),
+                  BoxShadow(
+                    color: AppColors.primary.withValues(alpha: 0.05),
+                    blurRadius: 20,
+                    spreadRadius: 3,
+                  ),
+                ],
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(16),
+                child: InkWell(
+                  onTap: t['action'] as VoidCallback,
+                  splashColor: AppColors.primary.withValues(alpha: 0.1),
+                  highlightColor: Colors.transparent,
+                  child: Stack(
                     children: [
-                      Text(
-                        t['title'] as String,
-                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Colors.white),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
+                      Positioned(
+                        right: -10,
+                        bottom: -10,
+                        child: Icon(
+                          t['icon'] as IconData,
+                          size: 56,
+                          color: Colors.white.withValues(alpha: 0.03),
+                        ),
                       ),
-                      const SizedBox(height: 4),
-                      Text(
-                        t['desc'] as String,
-                        style: const TextStyle(fontSize: 10, color: AppColors.onSurfaceVariant),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
+                      Positioned(
+                        top: 10,
+                        left: 10,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: List.generate(2, (r) => Row(
+                            children: List.generate(3, (c) => Container(
+                              width: 2.5,
+                              height: 2.5,
+                              margin: const EdgeInsets.all(1.5),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withValues(alpha: 0.12),
+                                shape: BoxShape.circle,
+                              ),
+                            )),
+                          )),
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.all(12),
+                        child: Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              Icon(t['icon'] as IconData, color: AppColors.primary, size: 28),
+                              const SizedBox(height: 8),
+                              Text(
+                                t['title'] as String,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 15,
+                                  color: Colors.white,
+                                ),
+                                textAlign: TextAlign.center,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ],
+                          ),
+                        ),
                       ),
                     ],
                   ),
-                ],
+                ),
               ),
             );
           },
