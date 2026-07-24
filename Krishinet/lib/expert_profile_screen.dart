@@ -151,7 +151,7 @@ class _ExpertProfileScreenState extends State<ExpertProfileScreen> {
                   border: Border.all(color: primary, width: 2.5),
                   image: const DecorationImage(
                     image: NetworkImage(
-                      'https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?auto=format&fit=crop&w=250&q=80',
+                      'https://images.unsplash.com/photo-1537368910025-700350fe46c7?auto=format&fit=crop&w=250&q=80',
                     ),
                     fit: BoxFit.cover,
                   ),
@@ -178,7 +178,7 @@ class _ExpertProfileScreenState extends State<ExpertProfileScreen> {
           ),
           const SizedBox(height: 16),
           Text(
-            'Dr. Aman Singh',
+            'Dr. Safwan Rahman',
             style: TextStyle(
               fontSize: 22,
               fontWeight: FontWeight.bold,
@@ -197,7 +197,7 @@ class _ExpertProfileScreenState extends State<ExpertProfileScreen> {
               Icon(Icons.location_on, color: primary, size: 16),
               const SizedBox(width: 4),
               Text(
-                'Bengaluru Regional Hub, IN',
+                'Dhaka Regional Hub, Bangladesh',
                 style: TextStyle(fontSize: 12, color: onSurfaceVariant),
               ),
             ],

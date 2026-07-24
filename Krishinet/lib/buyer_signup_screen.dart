@@ -97,6 +97,44 @@ class _BuyerSignupScreenState extends State<BuyerSignupScreen> {
     }
   }
 
+  void _handleGoogleSignup() async {
+    setState(() => _isLoading = true);
+    final messenger = ScaffoldMessenger.of(context);
+    final navigator = Navigator.of(context);
+    try {
+      await AuthService.register(
+        name: "Google Buyer",
+        email: "googlebuyer@krishinet.com",
+        password: "googlepassword123",
+        role: 'buyer',
+        phone: "+8801787654321",
+      );
+      messenger.showSnackBar(
+        const SnackBar(
+          content: Text('Registration successful via Google!'),
+          backgroundColor: Color(0xFF54E167),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      navigator.pushReplacement(
+        MaterialPageRoute(builder: (context) => const BuyerLoginScreen()),
+      );
+    } on ApiException catch (e) {
+      messenger.showSnackBar(
+        SnackBar(content: Text(e.message), backgroundColor: Colors.red[800]),
+      );
+    } catch (e) {
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text('Connection error: $e'),
+          backgroundColor: Colors.red[800],
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -527,7 +565,15 @@ class _BuyerSignupScreenState extends State<BuyerSignupScreen> {
 
   Widget _buildSocialButton({required IconData icon, required String label}) {
     return OutlinedButton.icon(
-      onPressed: () {},
+      onPressed: () {
+        if (label == 'Google') {
+          _handleGoogleSignup();
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('$label signup is not configured.')),
+          );
+        }
+      },
       icon: Icon(icon, color: onSurface, size: 24),
       label: Text(
         label,

@@ -72,6 +72,47 @@ class _NgoSignupScreenState extends State<NgoSignupScreen>
     super.dispose();
   }
 
+  void _handleGoogleSignup() async {
+    setState(() => _isLoading = true);
+    final messenger = ScaffoldMessenger.of(context);
+    final navigator = Navigator.of(context);
+    try {
+      await AuthService.register(
+        name: "Google Govt User",
+        email: "googlegovt@krishinet.com",
+        password: "googlepassword123",
+        role: 'govt',
+      );
+
+      messenger.showSnackBar(
+        const SnackBar(
+          content: Text('Registration successful via Google!'),
+          backgroundColor: Color(0xFF54E167),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+
+      navigator.pushReplacement(
+        MaterialPageRoute(
+          builder: (context) => const NgoLoginScreen(),
+        ),
+      );
+    } on ApiException catch (e) {
+      messenger.showSnackBar(
+        SnackBar(content: Text(e.message), backgroundColor: Colors.red[800]),
+      );
+    } catch (e) {
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text('Connection error: $e'),
+          backgroundColor: Colors.red[800],
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -414,9 +455,21 @@ class _NgoSignupScreenState extends State<NgoSignupScreen>
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        _buildSocialButton(Icons.g_mobiledata, Colors.white),
+                        _buildSocialButton(
+                          Icons.g_mobiledata,
+                          Colors.white,
+                          () => _handleGoogleSignup(),
+                        ),
                         const SizedBox(width: 16),
-                        _buildSocialButton(Icons.apple, Colors.white),
+                        _buildSocialButton(
+                          Icons.apple,
+                          Colors.white,
+                          () {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('Apple signup is not configured.')),
+                            );
+                          },
+                        ),
                       ],
                     ),
                   ],
@@ -429,15 +482,18 @@ class _NgoSignupScreenState extends State<NgoSignupScreen>
     );
   }
 
-  Widget _buildSocialButton(IconData icon, Color color) {
-    return Container(
-      width: 48,
-      height: 48,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        border: Border.all(color: outlineVariant.withValues(alpha: 0.3)),
+  Widget _buildSocialButton(IconData icon, Color color, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 48,
+        height: 48,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          border: Border.all(color: outlineVariant.withValues(alpha: 0.3)),
+        ),
+        child: Center(child: Icon(icon, color: color, size: 28)),
       ),
-      child: Center(child: Icon(icon, color: color, size: 28)),
     );
   }
 

@@ -1,10 +1,9 @@
-import 'dart:io';
 import 'dart:ui';
 import 'dart:math' as math;
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
+import 'core/utils/constants.dart';
 
 class GovtDashboardScreen extends StatefulWidget {
   const GovtDashboardScreen({super.key});
@@ -500,10 +499,7 @@ class _GovtDashboardScreenState extends State<GovtDashboardScreen> {
                       ),
                       child: ClipOval(
                         child:
-                            (kIsWeb ||
-                                    !Platform.environment.containsKey(
-                                      'FLUTTER_TEST',
-                                    ))
+                            (!AppConstants.isTesting)
                                 ? Image.network(
                                   'https://lh3.googleusercontent.com/aida-public/AB6AXuBeiu1xZ9N-Bi6-bT9-XKQiM7SlObrQTyooNVdy36y5oQM5UhlM0xj3RIaj_AADkkimNpLrbUxXqExDCJGoEVY0BtX79i25UL5K7XgJwkg1JIXjnteE7BtC9qlWaDnf95ObcZxhcQquoxB-QFaNbdQ90i3mtDhkKYF_sgQ8XYWu6JRWDoV-UJiiyUvcqIQfpgl2U0pGLEEszZiuZSyN_mgeAaaGMNzUM_O1sLKELOxXeTXvmdpoE9GsGpJUm90Y2i8p5bB91j5Wflnq',
                                   fit: BoxFit.cover,
@@ -651,8 +647,7 @@ class _GovtDashboardScreenState extends State<GovtDashboardScreen> {
                 ),
                 child: ClipOval(
                   child:
-                      (kIsWeb ||
-                              !Platform.environment.containsKey('FLUTTER_TEST'))
+                      (!AppConstants.isTesting)
                           ? Image.network(
                             'https://lh3.googleusercontent.com/aida-public/AB6AXuBeiu1xZ9N-Bi6-bT9-XKQiM7SlObrQTyooNVdy36y5oQM5UhlM0xj3RIaj_AADkkimNpLrbUxXqExDCJGoEVY0BtX79i25UL5K7XgJwkg1JIXjnteE7BtC9qlWaDnf95ObcZxhcQquoxB-QFaNbdQ90i3mtDhkKYF_sgQ8XYWu6JRWDoV-UJiiyUvcqIQfpgl2U0pGLEEszZiuZSyN_mgeAaaGMNzUM_O1sLKELOxXeTXvmdpoE9GsGpJUm90Y2i8p5bB91j5Wflnq',
                             fit: BoxFit.cover,
@@ -1109,7 +1104,7 @@ class _GovtDashboardScreenState extends State<GovtDashboardScreen> {
             ),
             child: ClipOval(
               child:
-                  (kIsWeb || !Platform.environment.containsKey('FLUTTER_TEST'))
+                  (!AppConstants.isTesting)
                       ? Image.network(
                         url,
                         fit: BoxFit.cover,
@@ -1538,10 +1533,7 @@ class _GovtDashboardScreenState extends State<GovtDashboardScreen> {
                     height: 140,
                     width: double.infinity,
                     child:
-                        (kIsWeb ||
-                                !Platform.environment.containsKey(
-                                  'FLUTTER_TEST',
-                                ))
+                        (!AppConstants.isTesting)
                             ? Image.network(
                               imageUrl,
                               fit: BoxFit.cover,
@@ -1731,10 +1723,7 @@ class _GovtDashboardScreenState extends State<GovtDashboardScreen> {
                 avatarUrl != null
                     ? ClipOval(
                       child:
-                          (kIsWeb ||
-                                  !Platform.environment.containsKey(
-                                    'FLUTTER_TEST',
-                                  ))
+                          (!AppConstants.isTesting)
                               ? Image.network(
                                 avatarUrl,
                                 fit: BoxFit.cover,

@@ -1,8 +1,7 @@
-import 'dart:io';
 import 'dart:ui';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'core/utils/constants.dart';
 
 class AdminDashboardScreen extends StatefulWidget {
   const AdminDashboardScreen({super.key});
@@ -22,7 +21,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     required BoxFit fit,
     required Widget Function(BuildContext, Object, StackTrace?) errorBuilder,
   }) {
-    if (!kIsWeb && Platform.environment.containsKey('FLUTTER_TEST')) {
+    if (AppConstants.isTesting) {
       return errorBuilder(context, Exception('Testing env placeholder'), null);
     }
     return Image.network(url, fit: fit, errorBuilder: errorBuilder);
