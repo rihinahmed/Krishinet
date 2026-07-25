@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'core/utils/constants.dart';
+import 'widgets/knowledge_base_section.dart';
 
 class GovtDashboardScreen extends StatefulWidget {
   const GovtDashboardScreen({super.key});
@@ -393,6 +394,8 @@ class _GovtDashboardScreenState extends State<GovtDashboardScreen> {
 
           // Field Reports
           _buildFieldReportsSection(),
+          const SizedBox(height: 24),
+          const KnowledgeBaseSection(role: 'govt'),
         ],
       ),
     );

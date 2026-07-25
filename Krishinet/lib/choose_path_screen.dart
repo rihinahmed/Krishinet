@@ -42,76 +42,24 @@ class _ChoosePathScreenState extends State<ChoosePathScreen>
       'icon': Icons.agriculture,
       'bgImage': 'assets/images/plants.jpg',
       'glowColor': const Color(0xFF54E167),
-      'activeGradient': const LinearGradient(
-        colors: [Color(0xFF1B5E20), Color(0xFF2E7D32), Color(0xFF4CAF50)],
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-      ),
-      'inactiveGradient': LinearGradient(
-        colors: [
-          const Color(0xFF142C1E).withValues(alpha: 0.85),
-          const Color(0xFF0A1810).withValues(alpha: 0.85),
-        ],
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-      ),
     },
     {
       'title': 'Agri-Expert',
       'icon': Icons.psychology,
       'bgImage': 'assets/images/crop1.jpg',
       'glowColor': const Color(0xFF64B5F6),
-      'activeGradient': const LinearGradient(
-        colors: [Color(0xFF0D47A1), Color(0xFF1565C0), Color(0xFF2196F3)],
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-      ),
-      'inactiveGradient': LinearGradient(
-        colors: [
-          const Color(0xFF13283F).withValues(alpha: 0.85),
-          const Color(0xFF091420).withValues(alpha: 0.85),
-        ],
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-      ),
     },
     {
       'title': 'Buyer',
       'icon': Icons.shopping_cart,
       'bgImage': 'assets/images/crop3.jpg',
       'glowColor': const Color(0xFFFFB74D),
-      'activeGradient': const LinearGradient(
-        colors: [Color(0xFFE65100), Color(0xFFF57C00), Color(0xFFFF9800)],
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-      ),
-      'inactiveGradient': LinearGradient(
-        colors: [
-          const Color(0xFF2C1E14).withValues(alpha: 0.85),
-          const Color(0xFF18100A).withValues(alpha: 0.85),
-        ],
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-      ),
     },
     {
       'title': 'Government Officials',
       'icon': Icons.favorite,
       'bgImage': 'assets/images/crop2.jpg',
       'glowColor': const Color(0xFF4DB6AC),
-      'activeGradient': const LinearGradient(
-        colors: [Color(0xFF004D40), Color(0xFF00695C), Color(0xFF009688)],
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-      ),
-      'inactiveGradient': LinearGradient(
-        colors: [
-          const Color(0xFF0F2624).withValues(alpha: 0.85),
-          const Color(0xFF081413).withValues(alpha: 0.85),
-        ],
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-      ),
     },
   ];
 
@@ -324,8 +272,6 @@ class _ChoosePathScreenState extends State<ChoosePathScreen>
           icon: role['icon'] as IconData,
           isActive: isActive,
           bgImage: role['bgImage'] as String,
-          activeGradient: role['activeGradient'] as Gradient,
-          inactiveGradient: role['inactiveGradient'] as Gradient,
           glowColor: role['glowColor'] as Color,
           onTap: () {
             setState(() {
@@ -654,8 +600,6 @@ class RoleCard extends StatefulWidget {
   final bool isActive;
   final VoidCallback onTap;
   final String bgImage;
-  final Gradient activeGradient;
-  final Gradient inactiveGradient;
   final Color glowColor;
 
   const RoleCard({
@@ -665,8 +609,6 @@ class RoleCard extends StatefulWidget {
     required this.isActive,
     required this.onTap,
     required this.bgImage,
-    required this.activeGradient,
-    required this.inactiveGradient,
     required this.glowColor,
   });
 
@@ -740,145 +682,192 @@ class _RoleCardState extends State<RoleCard> with TickerProviderStateMixin {
           duration: const Duration(milliseconds: 400),
           curve: Curves.easeInOut,
           decoration: BoxDecoration(
+            color: widget.isActive
+                ? Color.lerp(
+                    const Color(0xFF122131),
+                    widget.glowColor,
+                    0.08,
+                  )!.withValues(alpha: 0.92)
+                : const Color(0xFF122131).withValues(alpha: 0.60),
             borderRadius: BorderRadius.circular(20),
             border: Border.all(
               color: widget.isActive
-                  ? widget.glowColor
-                  : Colors.white.withValues(alpha: 0.1),
-              width: widget.isActive ? 2.5 : 1.0,
+                  ? widget.glowColor.withValues(alpha: 0.5)
+                  : Colors.white.withValues(alpha: 0.08),
+              width: widget.isActive ? 2.0 : 1.0,
             ),
             boxShadow: widget.isActive
                 ? [
                     BoxShadow(
-                      color: widget.glowColor.withValues(alpha: 0.35),
-                      blurRadius: 25,
-                      spreadRadius: 2,
-                      offset: const Offset(0, 8),
+                      color: widget.glowColor.withValues(alpha: 0.25),
+                      blurRadius: 15,
+                      spreadRadius: 1,
+                    ),
+                    BoxShadow(
+                      color: widget.glowColor.withValues(alpha: 0.08),
+                      blurRadius: 30,
+                      spreadRadius: 3,
                     ),
                   ]
                 : [],
           ),
           child: ClipRRect(
-            borderRadius: BorderRadius.circular(18),
-            child: Stack(
-              children: [
-                // 1. Background Image Layer
-                Positioned.fill(
-                  child: AnimatedOpacity(
-                    duration: const Duration(milliseconds: 400),
-                    opacity: widget.isActive ? 0.35 : 0.15,
-                    child: Image.asset(
-                      widget.bgImage,
-                      fit: BoxFit.cover,
-                    ),
-                  ),
-                ),
-
-                // 2. Color Gradient Overlay Layer
-                Positioned.fill(
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 400),
-                    decoration: BoxDecoration(
-                      gradient: widget.isActive
-                          ? widget.activeGradient
-                          : widget.inactiveGradient,
-                    ),
-                  ),
-                ),
-
-                // 3. Animated Shine Sweep Layer
-                if (widget.isActive)
+            borderRadius: BorderRadius.circular(20),
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+              child: Stack(
+                children: [
+                  // 1. Background Image Layer (extremely subtle/ghostly image background for glass feel)
                   Positioned.fill(
-                    child: AnimatedBuilder(
-                      animation: _shineController,
-                      builder: (context, child) {
-                        return CustomPaint(
-                          painter: ShinePainter(
-                            progress: _shineController.value,
-                          ),
-                        );
-                      },
+                    child: AnimatedOpacity(
+                      duration: const Duration(milliseconds: 400),
+                      opacity: widget.isActive ? 0.18 : 0.04,
+                      child: Image.asset(
+                        widget.bgImage,
+                        fit: BoxFit.cover,
+                      ),
                     ),
                   ),
 
-                // 4. Content Layer (gently floats, centered exactly)
-                Positioned.fill(
-                  child: AnimatedBuilder(
-                    animation: _floatController,
-                    builder: (context, child) {
-                      final double floatOffset = widget.isActive
-                          ? sin(_floatController.value * 2 * pi) * 4.0
-                          : 0.0;
-                      return Transform.translate(
-                        offset: Offset(0, floatOffset),
-                        child: child,
-                      );
-                    },
-                    child: Center(
-                      child: Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            // Icon with breathing container and active scale
-                            AnimatedContainer(
-                              duration: const Duration(milliseconds: 400),
-                              width: 56,
-                              height: 56,
+                  // 2. Faint Dot Grid Watermark (matching Expert Toolkit)
+                  Positioned(
+                    top: 12,
+                    left: 12,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: List.generate(
+                        2,
+                        (r) => Row(
+                          children: List.generate(
+                            3,
+                            (c) => Container(
+                              width: 2.5,
+                              height: 2.5,
+                              margin: const EdgeInsets.all(1.5),
                               decoration: BoxDecoration(
-                                color: widget.isActive
-                                    ? Colors.white.withValues(alpha: 0.2)
-                                    : Colors.white.withValues(alpha: 0.08),
-                                shape: BoxShape.circle,
-                                border: Border.all(
-                                  color: widget.isActive
-                                      ? Colors.white.withValues(alpha: 0.4)
-                                      : Colors.transparent,
-                                  width: 1.5,
+                                color: Colors.white.withValues(
+                                  alpha: widget.isActive ? 0.12 : 0.05,
                                 ),
-                                boxShadow: widget.isActive
-                                    ? [
-                                        BoxShadow(
-                                          color: Colors.white.withValues(alpha: 0.1),
-                                          blurRadius: 10,
-                                          spreadRadius: 1,
-                                        )
-                                      ]
-                                    : [],
-                              ),
-                              child: Icon(
-                                widget.icon,
-                                color: Colors.white,
-                                size: 30,
+                                shape: BoxShape.circle,
                               ),
                             ),
-                            const SizedBox(height: 16),
-                            // Title
-                            Text(
-                              widget.title,
-                              textAlign: TextAlign.center,
-                              style: GoogleFonts.plusJakartaSans(
-                                fontSize: 18,
-                                fontWeight: FontWeight.w700,
-                                color: Colors.white,
-                                letterSpacing: 0.5,
-                                shadows: [
-                                  Shadow(
-                                    color: Colors.black.withValues(alpha: 0.5),
-                                    offset: const Offset(0, 2),
-                                    blurRadius: 4,
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
+                          ),
                         ),
                       ),
                     ),
                   ),
-                ),
-              ],
+
+                  // 3. Watermark Icon in bottom right corner (matching Expert Toolkit)
+                  Positioned(
+                    right: -12,
+                    bottom: -12,
+                    child: Icon(
+                      widget.icon,
+                      size: 64,
+                      color: Colors.white.withValues(
+                        alpha: widget.isActive ? 0.05 : 0.015,
+                      ),
+                    ),
+                  ),
+
+                  // 4. Animated Shine Sweep Layer
+                  if (widget.isActive)
+                    Positioned.fill(
+                      child: AnimatedBuilder(
+                        animation: _shineController,
+                        builder: (context, child) {
+                          return CustomPaint(
+                            painter: ShinePainter(
+                              progress: _shineController.value,
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+
+                  // 5. Content Layer (dimmed when inactive)
+                  Positioned.fill(
+                    child: AnimatedOpacity(
+                      duration: const Duration(milliseconds: 400),
+                      opacity: widget.isActive ? 1.0 : 0.45,
+                      child: AnimatedBuilder(
+                        animation: _floatController,
+                        builder: (context, child) {
+                          final double floatOffset = widget.isActive
+                              ? sin(_floatController.value * 2 * pi) * 4.0
+                              : 0.0;
+                          return Transform.translate(
+                            offset: Offset(0, floatOffset),
+                            child: child,
+                          );
+                        },
+                        child: Center(
+                          child: Padding(
+                            padding: const EdgeInsets.all(16.0),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                // Icon with breathing container and active scale
+                                AnimatedContainer(
+                                  duration: const Duration(milliseconds: 400),
+                                  width: 56,
+                                  height: 56,
+                                  decoration: BoxDecoration(
+                                    color: widget.isActive
+                                        ? widget.glowColor.withValues(alpha: 0.2)
+                                        : Colors.white.withValues(alpha: 0.08),
+                                    shape: BoxShape.circle,
+                                    border: Border.all(
+                                      color: widget.isActive
+                                          ? widget.glowColor.withValues(alpha: 0.4)
+                                          : Colors.transparent,
+                                      width: 1.5,
+                                    ),
+                                    boxShadow: widget.isActive
+                                        ? [
+                                            BoxShadow(
+                                              color: widget.glowColor.withValues(alpha: 0.15),
+                                              blurRadius: 10,
+                                              spreadRadius: 1,
+                                            )
+                                          ]
+                                        : [],
+                                  ),
+                                  child: Icon(
+                                    widget.icon,
+                                    color: widget.isActive ? widget.glowColor : Colors.white,
+                                    size: 30,
+                                  ),
+                                ),
+                                const SizedBox(height: 16),
+                                // Title
+                                Text(
+                                  widget.title,
+                                  textAlign: TextAlign.center,
+                                  style: GoogleFonts.plusJakartaSans(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.w700,
+                                    color: Colors.white,
+                                    letterSpacing: 0.5,
+                                    shadows: [
+                                      Shadow(
+                                        color: Colors.black.withValues(alpha: 0.5),
+                                        offset: const Offset(0, 2),
+                                        blurRadius: 4,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ),

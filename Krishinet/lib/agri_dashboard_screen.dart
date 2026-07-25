@@ -9,6 +9,7 @@ import 'expert_profile_screen.dart';
 import 'expert_chat_screen.dart';
 import 'govt_portal_screen.dart';
 import 'expert_appointments_screen.dart';
+import 'widgets/knowledge_base_section.dart';
 
 void main() {
   runApp(const KrishinetApp());
@@ -296,15 +297,7 @@ class _KrishinetDashboardState extends State<KrishinetDashboard> {
                     onAppointmentTap: () => setState(() => _selectedIndex = 1),
                   ),
                   const SizedBox(height: 32),
-                  ActiveChatsSection(
-                    onChatTap: () => setState(() => _selectedIndex = 2),
-                  ),
-                  const SizedBox(height: 32),
-                  OfficerPortalSection(
-                    onContactTap: () => setState(() => _selectedIndex = 3),
-                  ),
-                  const SizedBox(height: 32),
-                  const KnowledgeBaseSection(),
+                  const KnowledgeBaseSection(role: 'expert'),
                   const SizedBox(height: 120), // Extra space for Bottom Nav
                 ]),
               ),
@@ -651,61 +644,6 @@ class ExpertToolkitSection extends StatefulWidget {
 
 class _ExpertToolkitSectionState extends State<ExpertToolkitSection> {
   // Form controllers / mock data states
-
-  final List<Map<String, dynamic>> _mockSoilRecords = [
-    {
-      'plot': 'Plot #09',
-      'owner': 'Kalam Miah',
-      'ph': '6.4',
-      'npk': 'N: Low, P: Med, K: High',
-      'crop': 'Boro Paddy',
-    },
-    {
-      'plot': 'Plot #42',
-      'owner': 'Tufan Ali',
-      'ph': '5.8',
-      'npk': 'N: High, P: Low, K: Med',
-      'crop': 'Potato',
-    },
-    {
-      'plot': 'Plot #11',
-      'owner': 'Sufia Begum',
-      'ph': '7.2',
-      'npk': 'N: Med, P: Med, K: Med',
-      'crop': 'Aman Paddy',
-    },
-  ];
-
-  final List<Map<String, dynamic>> _mockFarmerQueries = [
-    {
-      'id': 'Q-901',
-      'farmer': 'Selim Khan',
-      'query':
-          'Tomato leaf edges are turning brown and crispy. Is it potassium deficiency?',
-      'crop': 'Tomato',
-      'date': '2 hrs ago',
-      'replied': false,
-    },
-    {
-      'id': 'Q-772',
-      'farmer': 'Abdul Baten',
-      'query':
-          'My cow has lost appetite and has small nodules on its neck. What could it be?',
-      'crop': 'Livestock',
-      'date': '1 day ago',
-      'replied': false,
-    },
-    {
-      'id': 'Q-104',
-      'farmer': 'Amena Bibi',
-      'query':
-          'When is the best time to apply gypsum in maize fields for maximum yield?',
-      'crop': 'Maize',
-      'date': '2 days ago',
-      'replied': true,
-      'reply': 'Apply 40 kg per acre during land preparation.',
-    },
-  ];
 
   void _showSuccess(String msg) {
     ScaffoldMessenger.of(context).showSnackBar(
@@ -1800,6 +1738,7 @@ class _ExpertToolkitSectionState extends State<ExpertToolkitSection> {
     String objective = 'Crop';
     final speciesCtrl = TextEditingController();
     final headlineCtrl = TextEditingController();
+    final seatsCtrl = TextEditingController(text: "50");
 
     headlineCtrl.addListener(() {
       if (modalState != null) {
@@ -1814,7 +1753,7 @@ class _ExpertToolkitSectionState extends State<ExpertToolkitSection> {
       return "$day-$month-$year";
     }
 
-    void _showPosterDialog(
+    void showPosterDialog(
       String category,
       String headline,
       String date,
@@ -1825,7 +1764,7 @@ class _ExpertToolkitSectionState extends State<ExpertToolkitSection> {
       String objective,
       String species,
     ) {
-      Widget _buildPosterRow(IconData icon, String label, String value) {
+      Widget buildPosterRow(IconData icon, String label, String value) {
         return Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -1936,21 +1875,29 @@ class _ExpertToolkitSectionState extends State<ExpertToolkitSection> {
                           ),
                           child: Column(
                             children: [
-                              _buildPosterRow(Icons.calendar_today, "DATE", date),
+                              buildPosterRow(Icons.calendar_today, "DATE", date),
                               const Divider(color: Colors.white12, height: 16),
-                              _buildPosterRow(
+                              buildPosterRow(
                                 Icons.location_on,
                                 "VENUE",
                                 "$village, $thana, $upazila, $district",
                               ),
                               const Divider(color: Colors.white12, height: 16),
-                              _buildPosterRow(Icons.flag, "OBJECTIVE", objective),
+                              buildPosterRow(Icons.flag, "OBJECTIVE", objective),
                               if (species.isNotEmpty) ...[
                                 const Divider(color: Colors.white12, height: 16),
-                                _buildPosterRow(
+                                buildPosterRow(
                                   Icons.pets,
                                   "TARGETED SPECIES",
                                   species,
+                                ),
+                              ],
+                              if (type == 'Farmer Training Class' || type == 'Skill Workshop') ...[
+                                const Divider(color: Colors.white12, height: 16),
+                                buildPosterRow(
+                                  Icons.event_seat,
+                                  "MAXIMUM SEATS / REGISTRATION",
+                                  seatsCtrl.text.trim(),
                                 ),
                               ],
                             ],
@@ -2046,6 +1993,15 @@ class _ExpertToolkitSectionState extends State<ExpertToolkitSection> {
                       ],
                       onChanged: (val) => setModalState(() => type = val!),
                     ),
+                    if (type == 'Farmer Training Class' || type == 'Skill Workshop') ...[
+                      const SizedBox(height: 12),
+                      _buildTextField(
+                        "Maximum Seats / Registration *",
+                        seatsCtrl,
+                        keyboardType: TextInputType.number,
+                        placeholder: "e.g. 50",
+                      ),
+                    ],
                     const SizedBox(height: 12),
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -2173,13 +2129,16 @@ class _ExpertToolkitSectionState extends State<ExpertToolkitSection> {
                               final upazila = upazilaCtrl.text.trim();
                               final district = districtCtrl.text.trim();
                               final headline = headlineCtrl.text.trim();
+                              final needsSeats = (type == 'Farmer Training Class' || type == 'Skill Workshop');
+                              final seats = seatsCtrl.text.trim();
 
                               if (date.isEmpty ||
                                   village.isEmpty ||
                                   thana.isEmpty ||
                                   upazila.isEmpty ||
                                   district.isEmpty ||
-                                  headline.isEmpty) {
+                                  headline.isEmpty ||
+                                  (needsSeats && seats.isEmpty)) {
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   const SnackBar(
                                     content: Text("Please fill in all mandatory fields (*)"),
@@ -2202,7 +2161,7 @@ class _ExpertToolkitSectionState extends State<ExpertToolkitSection> {
                                 return;
                               }
 
-                              _showPosterDialog(
+                              showPosterDialog(
                                 type,
                                 headline,
                                 date,
@@ -2236,13 +2195,16 @@ class _ExpertToolkitSectionState extends State<ExpertToolkitSection> {
                               final upazila = upazilaCtrl.text.trim();
                               final district = districtCtrl.text.trim();
                               final headline = headlineCtrl.text.trim();
+                              final needsSeats = (type == 'Farmer Training Class' || type == 'Skill Workshop');
+                              final seats = seatsCtrl.text.trim();
 
                               if (date.isEmpty ||
                                   village.isEmpty ||
                                   thana.isEmpty ||
                                   upazila.isEmpty ||
                                   district.isEmpty ||
-                                  headline.isEmpty) {
+                                  headline.isEmpty ||
+                                  (needsSeats && seats.isEmpty)) {
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   const SnackBar(
                                     content: Text("Please fill in all mandatory fields (*)"),
@@ -2297,12 +2259,40 @@ class _ExpertToolkitSectionState extends State<ExpertToolkitSection> {
     );
   }
 
-  // --- 5. Emergency Outbreak Sheet ---
+  // --- 5. Disease or Disaster Alert Sheet ---
   void _emergencyOutbreakSheet() {
-    String disease = 'Lumpy Skin Disease (LSD)';
+    String alertType = 'Disease'; // 'Disease' or 'Disaster'
+    String selectedOption = 'Lumpy Skin Disease (LSD)';
     final locCtrl = TextEditingController();
     final countCtrl = TextEditingController(text: "15");
+    final precautionCtrl = TextEditingController();
     String severity = 'High';
+
+    final List<String> diseaseOptions = [
+      'Lumpy Skin Disease (LSD)',
+      'Anthrax',
+      'PPR Outbreak',
+      'Bird Flu (Avian Influenza)',
+      'Late Blight (Potato)',
+      'Foot and Mouth Disease (FMD)',
+      'Rice Blast Disease',
+      'Bacterial Leaf Blight',
+      'Newcastle Disease',
+      'Black Quarter',
+    ];
+
+    final List<String> disasterOptions = [
+      'Flash Flood',
+      'Cyclone',
+      'Severe Drought',
+      'Hailstorm',
+      'Tornado',
+      'Riverbank Erosion',
+      'Cold Wave',
+      'Heat Wave',
+      'Pest Invasion (Locusts)',
+      'Landslide',
+    ];
 
     showModalBottomSheet(
       context: context,
@@ -2312,7 +2302,7 @@ class _ExpertToolkitSectionState extends State<ExpertToolkitSection> {
         return StatefulBuilder(
           builder: (context, setModalState) {
             return _bottomSheetContainer(
-              title: "Report Emergency Disease Outbreak",
+              title: "Report Disease or Disaster Alert",
               icon: Icons.warning_amber,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -2327,14 +2317,14 @@ class _ExpertToolkitSectionState extends State<ExpertToolkitSection> {
                         color: AppColors.error.withValues(alpha: 0.3),
                       ),
                     ),
-                    child: const Row(
+                    child: Row(
                       children: [
-                        Icon(Icons.gpp_maybe, color: AppColors.error),
-                        SizedBox(width: 8),
+                        const Icon(Icons.gpp_maybe, color: AppColors.error),
+                        const SizedBox(width: 8),
                         Expanded(
                           child: Text(
-                            "CRITICAL: Outbreaks are reported immediately to the Ministry of Livestock & Agriculture.",
-                            style: TextStyle(
+                            "CRITICAL: $alertType alerts are reported immediately to the Upazila Command Office and relevant Ministry.",
+                            style: const TextStyle(
                               color: AppColors.error,
                               fontSize: 11,
                               fontWeight: FontWeight.bold,
@@ -2345,28 +2335,42 @@ class _ExpertToolkitSectionState extends State<ExpertToolkitSection> {
                     ),
                   ),
                   _buildDropdownField(
-                    label: "Select Disease Outbreak",
-                    value: disease,
-                    items: [
-                      'Lumpy Skin Disease (LSD)',
-                      'Anthrax',
-                      'PPR Outbreak',
-                      'Bird Flu (Avian Influenza)',
-                      'Late Blight Pandemic',
-                    ],
-                    onChanged: (val) => setModalState(() => disease = val!),
+                    label: "Select Disaster or Disease",
+                    value: alertType,
+                    items: ['Disease', 'Disaster'],
+                    onChanged: (val) => setModalState(() {
+                      alertType = val!;
+                      // Automatically reset to the first option when switching types
+                      selectedOption = alertType == 'Disease'
+                          ? diseaseOptions.first
+                          : disasterOptions.first;
+                    }),
+                  ),
+                  const SizedBox(height: 12),
+                  _buildDropdownField(
+                    label: alertType == 'Disease' ? "Select Disease" : "Select Disaster",
+                    value: selectedOption,
+                    items: alertType == 'Disease' ? diseaseOptions : disasterOptions,
+                    onChanged: (val) => setModalState(() => selectedOption = val!),
                   ),
                   const SizedBox(height: 12),
                   _buildTextField(
-                    "Exact Village / Word / Zone",
+                    "Affected Area *",
                     locCtrl,
                     placeholder: "e.g. Ward 4, Singair, Manikganj",
                   ),
                   const SizedBox(height: 12),
                   _buildTextField(
-                    "Est. Infected Animals/Crops",
+                    alertType == 'Disease' ? "Est. Infected Animal *" : "Est. Damaged Crop Land *",
                     countCtrl,
                     keyboardType: TextInputType.number,
+                  ),
+                  const SizedBox(height: 12),
+                  _buildTextField(
+                    "Precautions / Cure *",
+                    precautionCtrl,
+                    placeholder: "e.g. Isolate infected cattle, vaccinate surrounding herds.",
+                    maxLines: 3,
                   ),
                   const SizedBox(height: 12),
                   _buildDropdownField(
@@ -2376,12 +2380,27 @@ class _ExpertToolkitSectionState extends State<ExpertToolkitSection> {
                     onChanged: (val) => setModalState(() => severity = val!),
                   ),
                   const SizedBox(height: 20),
-                  _buildSubmitButton("File Emergency Threat Alert", () {
+                  _buildSubmitButton("File Disease or Disaster Alert", () {
+                    final affectedArea = locCtrl.text.trim();
+                    final estCount = countCtrl.text.trim();
+                    final precautions = precautionCtrl.text.trim();
+
+                    if (affectedArea.isEmpty || estCount.isEmpty || precautions.isEmpty) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text("Please fill in all mandatory fields (*)"),
+                          backgroundColor: AppColors.error,
+                          behavior: SnackBarBehavior.floating,
+                        ),
+                      );
+                      return;
+                    }
+
                     Navigator.pop(context);
                     _showSuccess(
-                      "EMERGENCY Alert filed. Threat vectors registered with Upazila Command Office!",
+                      "${alertType.toUpperCase()} Alert filed. Threat vectors registered with Upazila Command Office!",
                     );
-                  }, color: AppColors.error),
+                  }, color: AppColors.primary),
                 ],
               ),
             );
@@ -2391,419 +2410,15 @@ class _ExpertToolkitSectionState extends State<ExpertToolkitSection> {
     );
   }
 
-  // --- 6. Fertilizer & Feed Recommendations ---
-  void _fertilizerFeedSheet() {
-    String type = 'Crop (Fertilizer)';
-    final cropCtrl = TextEditingController(text: "Boro Paddy");
-    final decimalCtrl = TextEditingController(text: "100");
-    String output = "";
 
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      isScrollControlled: true,
-      builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setModalState) {
-            return _bottomSheetContainer(
-              title: "Recommend Fertilizer & Feed Usage",
-              icon: Icons.grass,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildDropdownField(
-                    label: "Recommendation Type",
-                    value: type,
-                    items: ['Crop (Fertilizer)', 'Livestock (Feed Chart)'],
-                    onChanged:
-                        (val) => setModalState(() {
-                          type = val!;
-                          cropCtrl.text =
-                              type == 'Crop (Fertilizer)'
-                                  ? "Boro Paddy"
-                                  : "Dairy Cow";
-                        }),
-                  ),
-                  const SizedBox(height: 12),
-                  _buildTextField(
-                    type == 'Crop (Fertilizer)'
-                        ? "Crop Name"
-                        : "Animal Breed/Category",
-                    cropCtrl,
-                  ),
-                  const SizedBox(height: 12),
-                  _buildTextField(
-                    type == 'Crop (Fertilizer)'
-                        ? "Land Area (Decimals)"
-                        : "Number of Animals / Daily Yield",
-                    decimalCtrl,
-                    keyboardType: TextInputType.number,
-                  ),
-                  const SizedBox(height: 16),
-                  if (output.isNotEmpty)
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(16),
-                      margin: const EdgeInsets.only(bottom: 16),
-                      decoration: BoxDecoration(
-                        color: AppColors.surfaceContainerHigh,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: AppColors.primary.withValues(alpha: 0.3),
-                        ),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            "Calculated Recommendation:",
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              color: AppColors.primary,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            output,
-                            style: const TextStyle(
-                              fontSize: 13,
-                              height: 1.4,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  _buildSubmitButton("Calculate Accents & Dosages", () {
-                    final dec = double.tryParse(decimalCtrl.text) ?? 100;
-                    setModalState(() {
-                      if (type == 'Crop (Fertilizer)') {
-                        output =
-                            "For ${cropCtrl.text} on $dec decimals:\n"
-                            "• Urea: ${(dec * 0.85).toStringAsFixed(1)} kg\n"
-                            "• TSP: ${(dec * 0.45).toStringAsFixed(1)} kg\n"
-                            "• MOP: ${(dec * 0.50).toStringAsFixed(1)} kg\n"
-                            "• Gypsum: ${(dec * 0.20).toStringAsFixed(1)} kg";
-                      } else {
-                        output =
-                            "For ${cropCtrl.text} ($dec units):\n"
-                            "• Green Fodder: ${(dec * 15).toStringAsFixed(0)} kg daily\n"
-                            "• Dry Straw: ${(dec * 4).toStringAsFixed(0)} kg daily\n"
-                            "• Concentrate Mix: ${(dec * 3.5).toStringAsFixed(1)} kg daily\n"
-                            "• Mineral Supplements: ${(dec * 100).toStringAsFixed(0)} g daily";
-                      }
-                    });
-                  }),
-                ],
-              ),
-            );
-          },
-        );
-      },
-    );
-  }
 
-  // --- 7. Conduct Farmer Workshops Sheet ---
-  void _farmerWorkshopSheet() {
-    final titleCtrl = TextEditingController(
-      text: "Integrated Pest Management (IPM)",
-    );
-    final countCtrl = TextEditingController(text: "30");
-    final descCtrl = TextEditingController();
 
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      isScrollControlled: true,
-      builder: (context) {
-        return _bottomSheetContainer(
-          title: "Conduct Farmer Training Workshops",
-          icon: Icons.co_present,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildTextField("Workshop Topic", titleCtrl),
-              const SizedBox(height: 12),
-              _buildTextField(
-                "Maximum Seats / Registrations",
-                countCtrl,
-                keyboardType: TextInputType.number,
-              ),
-              const SizedBox(height: 12),
-              _buildTextField(
-                "Syllabus & Core Objectives",
-                descCtrl,
-                placeholder:
-                    "e.g. Teaching biological insect traps, pheromone traps setup",
-              ),
-              const SizedBox(height: 20),
-              _buildSubmitButton("Open Workshop Registrations", () {
-                Navigator.pop(context);
-                _showSuccess(
-                  "Training Workshop created! Invitations pushed to local Union farmer boards.",
-                );
-              }),
-            ],
-          ),
-        );
-      },
-    );
-  }
 
-  // --- 9. Maintain Soil & Crop Records Sheet ---
-  void _soilCropRecordsSheet() {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      isScrollControlled: true,
-      builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setModalState) {
-            return _bottomSheetContainer(
-              title: "Soil Chemistry & Crop History",
-              icon: Icons.layers,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  SizedBox(
-                    height: 220,
-                    child: ListView.builder(
-                      itemCount: _mockSoilRecords.length,
-                      itemBuilder: (context, index) {
-                        final rec = _mockSoilRecords[index];
-                        return Container(
-                          margin: const EdgeInsets.only(bottom: 10),
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: AppColors.surfaceContainerHigh,
-                            borderRadius: BorderRadius.circular(10),
-                            border: Border.all(color: AppColors.glassBorder),
-                          ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    rec['plot']!,
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    "Farmer: ${rec['owner']} | Target Crop: ${rec['crop']}",
-                                    style: const TextStyle(
-                                      fontSize: 11,
-                                      color: AppColors.onSurfaceVariant,
-                                    ),
-                                  ),
-                                  Text(
-                                    "NPK: ${rec['npk']}",
-                                    style: const TextStyle(
-                                      fontSize: 11,
-                                      color: AppColors.onSurfaceVariant,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.end,
-                                children: [
-                                  const Text(
-                                    "pH LEVEL",
-                                    style: TextStyle(
-                                      fontSize: 9,
-                                      color: AppColors.onSurfaceVariant,
-                                    ),
-                                  ),
-                                  Text(
-                                    rec['ph']!,
-                                    style: const TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold,
-                                      color: AppColors.primary,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  _buildSubmitButton("Register New Plot Analysis", () {
-                    setModalState(() {
-                      _mockSoilRecords.add({
-                        'plot':
-                            'Plot #${12 + (DateTime.now().millisecond % 80)}',
-                        'owner': 'Jalal Ahmed',
-                        'ph': (5.0 +
-                                (DateTime.now().millisecond / 1000.0) * 2.5)
-                            .toStringAsFixed(1),
-                        'npk': 'N: Low, P: High, K: Med',
-                        'crop': 'Wheat',
-                      });
-                    });
-                    _showSuccess("Soil analysis plot registered!");
-                  }),
-                ],
-              ),
-            );
-          },
-        );
-      },
-    );
-  }
 
-  // --- 10. Offer Pest Outbreak Alerts ---
-  void _pestAlertSheet() {
-    String selectedPest = 'Brown Planthopper (Rice)';
-    final radiusCtrl = TextEditingController(text: "5");
-    final alertTextCtrl = TextEditingController(
-      text:
-          "Brown planthopper warning in your region. Check base of plants daily.",
-    );
 
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      isScrollControlled: true,
-      builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setModalState) {
-            return _bottomSheetContainer(
-              title: "Send Pest Outbreak Alerts",
-              icon: Icons.bug_report,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildDropdownField(
-                    label: "Detected Pest / Vector",
-                    value: selectedPest,
-                    items: [
-                      'Brown Planthopper (Rice)',
-                      'Fall Armyworm (Maize)',
-                      'Potato Tuber Moth',
-                      'Fruit Fly (Mango)',
-                      'Stem Borer',
-                    ],
-                    onChanged:
-                        (val) => setModalState(() => selectedPest = val!),
-                  ),
-                  const SizedBox(height: 12),
-                  _buildTextField(
-                    "Alert Radius (km)",
-                    radiusCtrl,
-                    keyboardType: TextInputType.number,
-                  ),
-                  const SizedBox(height: 12),
-                  _buildTextField("Alert Broadcast Text", alertTextCtrl),
-                  const SizedBox(height: 20),
-                  _buildSubmitButton("Broadcast Outbreak SMS Alert", () {
-                    Navigator.pop(context);
-                    _showSuccess(
-                      "Emergency Pest Warning sent to all farmers within ${radiusCtrl.text} km!",
-                    );
-                  }, color: const Color(0xFFFF5252)),
-                ],
-              ),
-            );
-          },
-        );
-      },
-    );
-  }
 
-  // --- 11. Seasonal Crop Planning Advice ---
-  void _cropPlanningSheet() {
-    String selectedSeason = 'Rabi (Winter)';
-    String recommendations = "";
 
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      isScrollControlled: true,
-      builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setModalState) {
-            return _bottomSheetContainer(
-              title: "Seasonal Crop Planning Guide",
-              icon: Icons.calendar_view_month,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildDropdownField(
-                    label: "Select Farming Season",
-                    value: selectedSeason,
-                    items: [
-                      'Kharif-1 (Early Summer)',
-                      'Kharif-2 (Monsoon)',
-                      'Rabi (Winter)',
-                    ],
-                    onChanged:
-                        (val) => setModalState(() {
-                          selectedSeason = val!;
-                          recommendations = "";
-                        }),
-                  ),
-                  const SizedBox(height: 16),
-                  if (recommendations.isNotEmpty)
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(16),
-                      margin: const EdgeInsets.only(bottom: 16),
-                      decoration: BoxDecoration(
-                        color: AppColors.surfaceContainerHigh,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: AppColors.primary.withValues(alpha: 0.2),
-                        ),
-                      ),
-                      child: Text(
-                        recommendations,
-                        style: const TextStyle(
-                          fontSize: 13,
-                          height: 1.5,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-                  _buildSubmitButton("Retrieve Recommended Crop Guide", () {
-                    setModalState(() {
-                      if (selectedSeason.contains('Rabi')) {
-                        recommendations =
-                            "Rabi (Winter) Planning Advice:\n"
-                            "• Highly Recommended Crops: Boro Paddy, Wheat, Potato, Lentils, Mustard.\n"
-                            "• Irrigation: Needs controlled application. Clayey soil should be watered every 15 days.\n"
-                            "• Pest Alert: High likelihood of Late Blight in potato fields due to heavy fog.";
-                      } else if (selectedSeason.contains('Kharif-1')) {
-                        recommendations =
-                            "Kharif-1 (Early Summer) Planning Advice:\n"
-                            "• Highly Recommended Crops: Aus Paddy, Jute, Maize, Sesame.\n"
-                            "• Irrigation: Prepare for summer thunderstorms. Build cross-channel drains.\n"
-                            "• Pest Alert: Stem borer threat in young Aus crops.";
-                      } else {
-                        recommendations =
-                            "Kharif-2 (Monsoon) Planning Advice:\n"
-                            "• Highly Recommended Crops: Aman Paddy, Jute, Floating Vegetables.\n"
-                            "• Irrigation: Flood safety drains needed. Keep fields under constant monitor.\n"
-                            "• Pest Alert: Rice Blast infection rises with monsoon humidity.";
-                      }
-                    });
-                  }),
-                ],
-              ),
-            );
-          },
-        );
-      },
-    );
-  }
+
 
   // --- 12. Deliver Soil Testing & Recommendations ---
   void _soilTestingSheet() {
@@ -2979,165 +2594,7 @@ class _ExpertToolkitSectionState extends State<ExpertToolkitSection> {
     );
   }
 
-  // --- 14. Respond to Farmer Queries Sheet ---
-  void _farmerQueriesSheet() {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      isScrollControlled: true,
-      builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setModalState) {
-            return _bottomSheetContainer(
-              title: "Respond to Farmer Queries Directly",
-              icon: Icons.question_answer,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  SizedBox(
-                    height: 250,
-                    child: ListView.builder(
-                      itemCount: _mockFarmerQueries.length,
-                      itemBuilder: (context, index) {
-                        final q = _mockFarmerQueries[index];
-                        final isReplied = q['replied'] as bool;
-                        final responseCtrl = TextEditingController();
-                        return Container(
-                          margin: const EdgeInsets.only(bottom: 12),
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: AppColors.surfaceContainerHigh,
-                            borderRadius: BorderRadius.circular(10),
-                            border: Border.all(color: AppColors.glassBorder),
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Text(
-                                    q['farmer']!,
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      color: AppColors.primary,
-                                      fontSize: 13,
-                                    ),
-                                  ),
-                                  Text(
-                                    q['date']!,
-                                    style: const TextStyle(
-                                      fontSize: 10,
-                                      color: AppColors.onSurfaceVariant,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 6),
-                              Text(
-                                q['query']!,
-                                style: const TextStyle(
-                                  fontSize: 12,
-                                  height: 1.4,
-                                  color: Colors.white,
-                                ),
-                              ),
-                              const Divider(color: Colors.white12, height: 16),
-                              if (isReplied)
-                                Text(
-                                  "Your Reply: ${q['reply']}",
-                                  style: const TextStyle(
-                                    fontSize: 11,
-                                    color: AppColors.onSurfaceVariant,
-                                  ),
-                                )
-                              else
-                                Row(
-                                  children: [
-                                    Expanded(
-                                      child: TextField(
-                                        controller: responseCtrl,
-                                        style: const TextStyle(
-                                          fontSize: 11,
-                                          color: Colors.white,
-                                        ),
-                                        decoration: const InputDecoration(
-                                          hintText: "Type reply here...",
-                                          hintStyle: TextStyle(
-                                            color: Colors.grey,
-                                            fontSize: 11,
-                                          ),
-                                          isDense: true,
-                                          contentPadding: EdgeInsets.symmetric(
-                                            horizontal: 10,
-                                            vertical: 8,
-                                          ),
-                                          filled: true,
-                                          fillColor: AppColors.surfaceContainer,
-                                          border: OutlineInputBorder(
-                                            borderSide: BorderSide.none,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                    const SizedBox(width: 8),
-                                    ElevatedButton(
-                                      onPressed: () {
-                                        final txt = responseCtrl.text.trim();
-                                        if (txt.isEmpty) return;
-                                        setModalState(() {
-                                          q['replied'] = true;
-                                          q['reply'] = txt;
-                                        });
-                                        _showSuccess(
-                                          "Reply sent to ${q['farmer']}!",
-                                        );
-                                      },
-                                      style: ElevatedButton.styleFrom(
-                                        backgroundColor: AppColors.primary,
-                                        foregroundColor: const Color(
-                                          0xFF00390E,
-                                        ),
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 12,
-                                        ),
-                                        minimumSize: const Size(60, 30),
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(
-                                            6,
-                                          ),
-                                        ),
-                                      ),
-                                      child: const Text(
-                                        "Send",
-                                        style: TextStyle(
-                                          fontSize: 11,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                            ],
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  _buildSubmitButton(
-                    "Close Inbox",
-                    () => Navigator.pop(context),
-                  ),
-                ],
-              ),
-            );
-          },
-        );
-      },
-    );
-  }
+
 
   // --- Shared Helper UI Builders ---
   Widget _bottomSheetContainer({
@@ -3252,7 +2709,7 @@ class _ExpertToolkitSectionState extends State<ExpertToolkitSection> {
         ),
         const SizedBox(height: 6),
         DropdownButtonFormField<String>(
-          value: value,
+          initialValue: value,
           dropdownColor: AppColors.surfaceContainerHigh,
           style: const TextStyle(color: Colors.white, fontSize: 13),
           items:
@@ -3328,40 +2785,10 @@ class _ExpertToolkitSectionState extends State<ExpertToolkitSection> {
         'action': _vaccineTrainingSheet,
       },
       {
-        'title': 'Emergency Outbreaks',
-        'desc': 'Report emergency disease outbreaks',
+        'title': 'Disease or Disaster Alert',
+        'desc': 'Report emergency disease outbreaks or natural disasters',
         'icon': Icons.warning_amber,
         'action': _emergencyOutbreakSheet,
-      },
-      {
-        'title': 'Fertilizer & Feed Guide',
-        'desc': 'Recommend fertilizer & feed usage',
-        'icon': Icons.grass,
-        'action': _fertilizerFeedSheet,
-      },
-      {
-        'title': 'Farmer Workshops',
-        'desc': 'Conduct farmer training workshops',
-        'icon': Icons.co_present,
-        'action': _farmerWorkshopSheet,
-      },
-      {
-        'title': 'Soil & Crop Registry',
-        'desc': 'Maintain soil & crop records',
-        'icon': Icons.layers,
-        'action': _soilCropRecordsSheet,
-      },
-      {
-        'title': 'Pest Warning Alerts',
-        'desc': 'Offer pest outbreak alerts',
-        'icon': Icons.bug_report,
-        'action': _pestAlertSheet,
-      },
-      {
-        'title': 'Seasonal Crop Plans',
-        'desc': 'Provide seasonal crop planning advice',
-        'icon': Icons.calendar_view_month,
-        'action': _cropPlanningSheet,
       },
       {
         'title': 'Soil Recommendations',
@@ -3374,12 +2801,6 @@ class _ExpertToolkitSectionState extends State<ExpertToolkitSection> {
         'desc': 'Upload research-based advisory docs',
         'icon': Icons.cloud_upload,
         'action': _uploadAdvisorySheet,
-      },
-      {
-        'title': 'Farmer Inbox Direct',
-        'desc': 'Respond to farmer queries directly',
-        'icon': Icons.question_answer,
-        'action': _farmerQueriesSheet,
       },
     ];
 
@@ -3526,7 +2947,7 @@ class UpcomingAppointmentsSection extends StatelessWidget {
               ),
             ),
             TextButton(
-              onPressed: () {},
+              onPressed: onAppointmentTap,
               style: TextButton.styleFrom(
                 padding: EdgeInsets.zero,
                 minimumSize: const Size(50, 20),
@@ -3616,634 +3037,7 @@ class UpcomingAppointmentsSection extends StatelessWidget {
   }
 }
 
-// ==========================================
-// 7. ACTIVE CHATS SECTION
-// ==========================================
-class ActiveChatsSection extends StatelessWidget {
-  final VoidCallback? onChatTap;
-  const ActiveChatsSection({super.key, this.onChatTap});
 
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            const Text(
-              "Active Chats",
-              style: TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
-                color: AppColors.onBackground,
-              ),
-            ),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                color: AppColors.primaryContainer,
-                borderRadius: BorderRadius.circular(4),
-              ),
-              child: const Text(
-                '3 URGENT',
-                style: TextStyle(
-                  fontSize: 10,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF004713),
-                  letterSpacing: 0.5,
-                ),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 16),
-        SizedBox(
-          height: 140,
-          child: ListView(
-            scrollDirection: Axis.horizontal,
-            physics: const BouncingScrollPhysics(),
-            clipBehavior: Clip.none,
-            children: [
-              _buildChatItem(
-                name: 'Selim Rahman',
-                status: 'Typing...',
-                imageUrl:
-                    'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=150&q=80',
-                statusColor: AppColors.primary,
-                isUrgent: true,
-                isPulse: true,
-                onTap: onChatTap,
-              ),
-              const SizedBox(width: 16),
-              _buildChatItem(
-                name: 'Mina Khatun',
-                status: '2m ago',
-                imageUrl:
-                    'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=150&q=80',
-                statusColor: AppColors.secondary,
-                onTap: onChatTap,
-              ),
-              const SizedBox(width: 16),
-              _buildChatItem(
-                name: 'Kabir U.',
-                status: '15m ago',
-                imageUrl:
-                    'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=150&q=80',
-                statusColor: AppColors.primary,
-                onTap: onChatTap,
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildChatItem({
-    required String name,
-    required String status,
-    required String imageUrl,
-    required Color statusColor,
-    bool isUrgent = false,
-    bool isPulse = false,
-    VoidCallback? onTap,
-  }) {
-    return Container(
-      width: 140,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(16),
-        border:
-            isUrgent
-                ? const Border(
-                  top: BorderSide(color: AppColors.primary, width: 2),
-                )
-                : null,
-      ),
-      child: GlassCard(
-        padding: const EdgeInsets.all(16),
-        onTap: onTap,
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Stack(
-              children: [
-                Container(
-                  width: 56,
-                  height: 56,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    border:
-                        isUrgent
-                            ? Border.all(
-                              color: AppColors.primary.withValues(alpha: 0.5),
-                              width: 2,
-                            )
-                            : null,
-                    image: DecorationImage(
-                      image: AppConstants.buildImageProvider(imageUrl),
-                      fit: BoxFit.cover,
-                    ),
-                  ),
-                ),
-                Positioned(
-                  bottom: 0,
-                  right: 0,
-                  child: Container(
-                    width: 14,
-                    height: 14,
-                    decoration: BoxDecoration(
-                      color: statusColor,
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: AppColors.surfaceContainer,
-                        width: 2,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 10),
-            Text(
-              name,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                fontWeight: FontWeight.w600,
-                fontSize: 13,
-                color: AppColors.onBackground,
-              ),
-            ),
-            const SizedBox(height: 2),
-            Text(
-              status,
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: isPulse ? FontWeight.bold : FontWeight.normal,
-                color: isPulse ? AppColors.primary : AppColors.onSurfaceVariant,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// ==========================================
-// 8. GOVERNMENT LIAISON (OFFICER PORTAL)
-// ==========================================
-class OfficerPortalSection extends StatelessWidget {
-  final VoidCallback? onContactTap;
-  const OfficerPortalSection({super.key, this.onContactTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            AppColors.surfaceContainerHigh,
-            AppColors.surfaceContainerLow,
-          ],
-        ),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(24),
-        child: Stack(
-          children: [
-            // Glowing orb background
-            Positioned(
-              right: -40,
-              top: -40,
-              child: Container(
-                width: 180,
-                height: 180,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: AppColors.primary.withValues(alpha: 0.08),
-                ),
-                child: BackdropFilter(
-                  filter: ImageFilter.blur(sigmaX: 40, sigmaY: 40),
-                  child: Container(color: Colors.transparent),
-                ),
-              ),
-            ),
-            // Content
-            Padding(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          color: AppColors.primary.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: const Icon(
-                          Icons.account_balance,
-                          color: AppColors.primary,
-                          size: 24,
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      const Text(
-                        'Officer Portal',
-                        style: TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.onBackground,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  const Text(
-                    'Direct communication channel with Department of Agriculture officers for subsidy approvals and policy clarifications.',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: AppColors.onSurfaceVariant,
-                      height: 1.5,
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: ElevatedButton.icon(
-                          onPressed: onContactTap,
-                          icon: const Icon(Icons.contact_mail, size: 18),
-                          label: const Text(
-                            'Contact Officer',
-                            style: TextStyle(fontWeight: FontWeight.w600),
-                          ),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.primary,
-                            foregroundColor: const Color(0xFF00390E),
-                            padding: const EdgeInsets.symmetric(vertical: 14),
-                            elevation: 0,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: OutlinedButton.icon(
-                          onPressed: () {},
-                          icon: const Icon(Icons.description, size: 18),
-                          label: const Text(
-                            'View Directives',
-                            style: TextStyle(fontWeight: FontWeight.w600),
-                          ),
-                          style: OutlinedButton.styleFrom(
-                            foregroundColor: AppColors.onBackground,
-                            backgroundColor: AppColors.surfaceContainerHighest,
-                            padding: const EdgeInsets.symmetric(vertical: 14),
-                            side: BorderSide(
-                              color: AppColors.outlineVariant.withValues(
-                                alpha: 0.3,
-                              ),
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// ==========================================
-// 9. KNOWLEDGE BASE SECTION
-// ==========================================
-class KnowledgeBaseSection extends StatelessWidget {
-  const KnowledgeBaseSection({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            const Text(
-              "Knowledge Base",
-              style: TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
-                color: AppColors.onBackground,
-              ),
-            ),
-            TextButton(
-              onPressed: () {},
-              style: TextButton.styleFrom(
-                padding: EdgeInsets.zero,
-                minimumSize: const Size(50, 20),
-                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-              ),
-              child: const Text(
-                'Manage Feed',
-                style: TextStyle(
-                  color: AppColors.primary,
-                  fontWeight: FontWeight.w600,
-                  fontSize: 13,
-                ),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 16),
-        // Article Card 1
-        GlassCard(
-          padding: EdgeInsets.zero,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Stack(
-                children: [
-                  SizedBox(
-                    height: 176,
-                    width: double.infinity,
-                    child: AppConstants.buildNetworkImage(
-                      context: context,
-                      url:
-                          'https://images.unsplash.com/photo-1500937386664-56d1dfef3854?auto=format&fit=crop&w=800&q=80',
-                      fit: BoxFit.cover,
-                      errorBuilder:
-                          (context, error, stackTrace) => Container(
-                            color: AppColors.surfaceContainer,
-                            child: const Center(
-                              child: Icon(
-                                Icons.park,
-                                color: AppColors.primary,
-                                size: 48,
-                              ),
-                            ),
-                          ),
-                    ),
-                  ),
-                  Positioned.fill(
-                    child: DecoratedBox(
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.bottomCenter,
-                          end: Alignment.topCenter,
-                          colors: [
-                            AppColors.surfaceContainer,
-                            Colors.transparent,
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              Padding(
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 2,
-                          ),
-                          decoration: BoxDecoration(
-                            color: AppColors.primary.withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          child: const Text(
-                            'FEATURED POST',
-                            style: TextStyle(
-                              fontSize: 10,
-                              fontWeight: FontWeight.bold,
-                              color: AppColors.primary,
-                            ),
-                          ),
-                        ),
-                        const Text(
-                          'Oct 24, 2023',
-                          style: TextStyle(
-                            fontSize: 11,
-                            color: AppColors.onSurfaceVariant,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    const Text(
-                      'Maximizing Rabi Yields through Regenerative Practices',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        height: 1.3,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    const Text(
-                      'Recent analytics suggest that local nitrogen levels are dipping across North zones. Recommend adding clover cover crops to maintain soil health for the upcoming cycle.',
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: AppColors.onSurfaceVariant,
-                        height: 1.5,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Row(
-                          children: [
-                            TextButton(
-                              onPressed: () {},
-                              style: TextButton.styleFrom(
-                                backgroundColor: AppColors.primary.withValues(
-                                  alpha: 0.1,
-                                ),
-                                foregroundColor: AppColors.primary,
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 16,
-                                  vertical: 10,
-                                ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                              ),
-                              child: const Text(
-                                'Edit Post',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: 12,
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            IconButton(
-                              onPressed: () {},
-                              style: IconButton.styleFrom(
-                                backgroundColor:
-                                    AppColors.surfaceContainerHighest,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                              ),
-                              icon: const Icon(
-                                Icons.share,
-                                size: 18,
-                                color: AppColors.onSurfaceVariant,
-                              ),
-                            ),
-                          ],
-                        ),
-                        const Row(
-                          children: [
-                            Icon(
-                              Icons.visibility_outlined,
-                              size: 16,
-                              color: AppColors.onSurfaceVariant,
-                            ),
-                            SizedBox(width: 4),
-                            Text(
-                              '1.2k',
-                              style: TextStyle(
-                                fontSize: 11,
-                                color: AppColors.onSurfaceVariant,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 16),
-        // Article Card 2 (Suggestion)
-        GlassCard(
-          padding: const EdgeInsets.all(20),
-          customBorder: const Border(
-            left: BorderSide(color: AppColors.tertiaryContainer, width: 4),
-            top: BorderSide(color: AppColors.glassBorder),
-            right: BorderSide(color: AppColors.glassBorder),
-            bottom: BorderSide(color: AppColors.glassBorder),
-          ),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: AppColors.tertiaryContainer.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Icon(
-                  Icons.lightbulb_outline,
-                  color: AppColors.tertiary,
-                ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          'EXPERT SUGGESTION',
-                          style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.tertiary,
-                            letterSpacing: 0.5,
-                          ),
-                        ),
-                        Text(
-                          '2h ago',
-                          style: TextStyle(
-                            fontSize: 11,
-                            color: AppColors.onSurfaceVariant,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 4),
-                    const Text(
-                      'Intercropping Mustard with Wheat',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    const Text(
-                      'Data from the Punjab region shows a 15% reduction in pest outbreaks when intercropping is implemented...',
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: AppColors.onSurfaceVariant,
-                        height: 1.4,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    GestureDetector(
-                      onTap: () {},
-                      child: const Row(
-                        children: [
-                          Text(
-                            'Read Full Memo',
-                            style: TextStyle(
-                              color: AppColors.primary,
-                              fontWeight: FontWeight.w600,
-                              fontSize: 13,
-                            ),
-                          ),
-                          SizedBox(width: 4),
-                          Icon(
-                            Icons.north_east,
-                            color: AppColors.primary,
-                            size: 14,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-}
 
 // ==========================================
 // 10. BOTTOM NAVIGATION BAR

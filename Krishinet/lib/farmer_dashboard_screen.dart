@@ -3,6 +3,7 @@ import 'dart:ui' show ImageFilter;
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
+import 'widgets/knowledge_base_section.dart';
 
 class FarmerDashboardScreen extends StatefulWidget {
   final bool isGuest;
@@ -1237,6 +1238,8 @@ class _FarmerDashboardScreenState extends State<FarmerDashboardScreen> {
                 _buildKrishiNews(),
                 const SizedBox(height: 24),
                 _buildDailyAdvisories(),
+                const SizedBox(height: 24),
+                const KnowledgeBaseSection(role: 'farmer'),
               ],
             ),
           ),
@@ -2398,8 +2401,9 @@ class _FarmerDashboardScreenState extends State<FarmerDashboardScreen> {
               if (status == "Apply Now")
                 TextButton(
                   onPressed: () {
-                    if (_checkGuestRestriction("Apply for Govt Schemes"))
+                    if (_checkGuestRestriction("Apply for Govt Schemes")) {
                       return;
+                    }
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
                         content: Text(
@@ -4517,8 +4521,9 @@ $solution""",
   }) {
     Color statusColor = Colors.amber;
     if (ord['status'] == 'In Transit') statusColor = Colors.blueAccent;
-    if (ord['status'] == 'Delivered' || ord['status'] == 'Completed')
+    if (ord['status'] == 'Delivered' || ord['status'] == 'Completed') {
       statusColor = const Color(0xFF54E167);
+    }
     if (ord['status'] == 'Bid Pending') statusColor = Colors.purpleAccent;
 
     return GestureDetector(
@@ -6461,7 +6466,7 @@ $solution""",
                     title: const Text("Push Notifications", style: TextStyle(color: Colors.white)),
                     subtitle: const Text("Get updates when bids are placed on your crops", style: TextStyle(color: Colors.grey, fontSize: 11)),
                     value: notifyEnabled,
-                    activeColor: const Color(0xFF54E167),
+                    activeThumbColor: const Color(0xFF54E167),
                     onChanged: (val) {
                       setModalState(() {
                         notifyEnabled = val;
@@ -6472,7 +6477,7 @@ $solution""",
                     title: const Text("Direct SMS Alerts", style: TextStyle(color: Colors.white)),
                     subtitle: const Text("Receive SMS warnings for low soil moisture and weather advisories", style: TextStyle(color: Colors.grey, fontSize: 11)),
                     value: smsEnabled,
-                    activeColor: const Color(0xFF54E167),
+                    activeThumbColor: const Color(0xFF54E167),
                     onChanged: (val) {
                       setModalState(() {
                         smsEnabled = val;
@@ -6844,7 +6849,7 @@ $solution""",
                     ),
                     const SizedBox(height: 8),
                     DropdownButtonFormField<String>(
-                      value: selectedCrop,
+                      initialValue: selectedCrop,
                       dropdownColor: const Color(0xFF0F1E2E),
                       items: const [
                         DropdownMenuItem(value: "Paddy", child: Text("Paddy (Rice)")),
