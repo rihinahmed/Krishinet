@@ -33,6 +33,196 @@ class _ExpertProfileScreenState extends State<ExpertProfileScreen> {
   bool _dndMode = false;
   bool _biometricLock = true;
 
+  // Stateful list of expert skills and credentials with fees
+  final List<Map<String, String>> _skills = [
+    {
+      'name': 'Soil Chemistry & Mineral Analysis',
+      'fee': '\$50',
+      'unit': 'hour',
+    },
+    {
+      'name': 'Pest Control and Pathology Mitigation',
+      'fee': '\$75',
+      'unit': 'visit',
+    },
+    {
+      'name': 'Hydroponic and Aeroponic Design',
+      'fee': '\$100',
+      'unit': 'hour',
+    },
+    {
+      'name': 'Govt Subsidy Eligibility Verification',
+      'fee': '\$40',
+      'unit': 'visit',
+    },
+  ];
+
+  void _showAddSkillDialog() {
+    final nameCtrl = TextEditingController();
+    final feeCtrl = TextEditingController();
+    String billingUnit = 'hour'; // 'hour' or 'visit'
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              backgroundColor: surfaceContainer,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              title: const Text(
+                "Add Specialization & Fee",
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      "SPECIALIZATION NAME",
+                      style: TextStyle(
+                        color: Colors.white70,
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    TextField(
+                      controller: nameCtrl,
+                      style: const TextStyle(color: Colors.white, fontSize: 14),
+                      decoration: InputDecoration(
+                        hintText: "e.g. Organic Crop Cultivation",
+                        hintStyle: const TextStyle(color: Colors.grey),
+                        filled: true,
+                        fillColor: surfaceContainerHigh,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide.none,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    const Text(
+                      "CONSULTATION FEE (USD / BDT)",
+                      style: TextStyle(
+                        color: Colors.white70,
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    TextField(
+                      controller: feeCtrl,
+                      keyboardType: TextInputType.number,
+                      style: const TextStyle(color: Colors.white, fontSize: 14),
+                      decoration: InputDecoration(
+                        hintText: "e.g. 50",
+                        hintStyle: const TextStyle(color: Colors.grey),
+                        filled: true,
+                        fillColor: surfaceContainerHigh,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide.none,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    const Text(
+                      "BILLING UNIT",
+                      style: TextStyle(
+                        color: Colors.white70,
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: ChoiceChip(
+                            label: const Text("Per Hour"),
+                            selected: billingUnit == 'hour',
+                            selectedColor: primary.withValues(alpha: 0.2),
+                            backgroundColor: surfaceContainerHigh,
+                            labelStyle: TextStyle(
+                              color: billingUnit == 'hour' ? primary : Colors.white70,
+                              fontSize: 12,
+                            ),
+                            onSelected: (val) {
+                              if (val) setDialogState(() => billingUnit = 'hour');
+                            },
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: ChoiceChip(
+                            label: const Text("Per Visit"),
+                            selected: billingUnit == 'visit',
+                            selectedColor: primary.withValues(alpha: 0.2),
+                            backgroundColor: surfaceContainerHigh,
+                            labelStyle: TextStyle(
+                              color: billingUnit == 'visit' ? primary : Colors.white70,
+                              fontSize: 12,
+                            ),
+                            onSelected: (val) {
+                              if (val) setDialogState(() => billingUnit = 'visit');
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text("Cancel", style: TextStyle(color: Colors.grey)),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    final name = nameCtrl.text.trim();
+                    final fee = feeCtrl.text.trim();
+                    if (name.isEmpty || fee.isEmpty) return;
+                    setState(() {
+                      _skills.add({
+                        'name': name,
+                        'fee': "\$$fee",
+                        'unit': billingUnit,
+                      });
+                    });
+                    Navigator.pop(context);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          "Specialization '$name' with fee \$$fee/$billingUnit added successfully!",
+                        ),
+                        backgroundColor: primary,
+                      ),
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: primary,
+                    foregroundColor: const Color(0xFF00390E),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  child: const Text("Add Skill"),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     Widget content = SingleChildScrollView(
@@ -183,8 +373,8 @@ class _ExpertProfileScreenState extends State<ExpertProfileScreen> {
               fontSize: 22,
               fontWeight: FontWeight.bold,
               color: onBackground,
-            ),
-          ),
+                ),
+              ),
           const SizedBox(height: 4),
           Text(
             'PhD, Soil Science & Plant Entomology',
@@ -283,26 +473,35 @@ class _ExpertProfileScreenState extends State<ExpertProfileScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Icon(Icons.workspace_premium, color: primary, size: 20),
-              const SizedBox(width: 8),
-              const Text(
-                'Specializations & Special Credentials',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              Row(
+                children: [
+                  Icon(Icons.workspace_premium, color: primary, size: 20),
+                  const SizedBox(width: 8),
+                  const Text(
+                    'Specializations & Credentials',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+                  ),
+                ],
+              ),
+              IconButton(
+                icon: Icon(Icons.add_circle_outline, color: primary, size: 20),
+                onPressed: _showAddSkillDialog,
+                tooltip: "Add Specialization / Skill Fee",
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
               ),
             ],
           ),
           const SizedBox(height: 16),
-          _buildBadgeItem('Soil Chemistry & Mineral Analysis'),
-          _buildBadgeItem('Pest Control and Pathology Mitigation'),
-          _buildBadgeItem('Hydroponic and Aeroponic Design'),
-          _buildBadgeItem('Govt Subsidy Eligibility Verification'),
+          ..._skills.map((skill) => _buildBadgeItem(skill)),
         ],
       ),
     );
   }
 
-  Widget _buildBadgeItem(String text) {
+  Widget _buildBadgeItem(Map<String, String> skill) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 10.0),
       child: Row(
@@ -312,8 +511,21 @@ class _ExpertProfileScreenState extends State<ExpertProfileScreen> {
           const SizedBox(width: 8),
           Expanded(
             child: Text(
-              text,
+              skill['name']!,
               style: TextStyle(fontSize: 13.5, color: onBackground),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+            decoration: BoxDecoration(
+              color: primary.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(6),
+              border: Border.all(color: primary.withValues(alpha: 0.2)),
+            ),
+            child: Text(
+              "${skill['fee']} / ${skill['unit']}",
+              style: TextStyle(color: primary, fontSize: 11, fontWeight: FontWeight.bold),
             ),
           ),
         ],
