@@ -5,7 +5,7 @@
 KrishiNet is a farmer‑friendly digital platform designed to connect **Government Officers, Farmers, Buyers, and Agri Expert** in Bangladesh. It empowers farmers with direct market access, government support, and expert consultation, while enabling administrators to monitor and manage agricultural activities efficiently.  
 
 
-🎯 Objectives  
+🎯 **Objectives**  
 - Digitalize agriculture management at Upazilla level.  
 - Empower farmers with direct selling and advisory support.  
 - Reduce middlemen and ensure fair pricing for buyers.  
@@ -14,7 +14,7 @@ KrishiNet is a farmer‑friendly digital platform designed to connect **Governme
 
 
 
- 👥 Stakeholders & Roles  
+ 👥 **Stakeholders & Roles**  
 
 **Government Officers** 
 - Register and manage farmers  
