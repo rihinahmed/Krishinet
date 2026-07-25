@@ -33,18 +33,127 @@ class ChatMessage {
   final String text;
   final bool isMe;
   final DateTime time;
+  final String? imagePath;
 
-  ChatMessage({required this.text, required this.isMe, required this.time});
+  ChatMessage({
+    required this.text,
+    required this.isMe,
+    required this.time,
+    this.imagePath,
+  });
 }
 
 class ExpertChatScreen extends StatefulWidget {
   final bool isEmbedded;
   final String? initialChatId;
+  final String? initialFarmerName;
   const ExpertChatScreen({
     super.key,
     this.isEmbedded = false,
     this.initialChatId,
+    this.initialFarmerName,
   });
+
+  // Global static list of chat rooms to persist message history across tab transitions
+  static List<FarmerChat>? _globalChatRooms;
+  static List<FarmerChat> get chatRooms {
+    _globalChatRooms ??= [
+        FarmerChat(
+          id: '1',
+          name: 'Selim Rahman',
+          lastMessage:
+              'The yellow spots are spreading to lower leaves. What should I spray?',
+          time: 'Typing...',
+          imageUrl:
+              'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=150&q=80',
+          isOnline: true,
+          isUrgent: true,
+          cropContext: 'Wheat • North Acre Area',
+          role: 'farmer',
+          messages: [
+            ChatMessage(
+              text: "Hello Doctor, I recently uploaded soil reports.",
+              isMe: false,
+              time: DateTime.now().subtract(const Duration(minutes: 20)),
+            ),
+            ChatMessage(
+              text:
+                  "Thanks Selim, I reviewed the report. Nitrogen is slightly low, but the visual leaf symptoms look like early-stage Rust disease.",
+              isMe: true,
+              time: DateTime.now().subtract(const Duration(minutes: 15)),
+            ),
+            ChatMessage(
+              text:
+                  "The yellow spots are spreading to lower leaves. What should I spray?",
+              isMe: false,
+              time: DateTime.now().subtract(const Duration(minutes: 2)),
+            ),
+          ],
+        ),
+        FarmerChat(
+          id: '2',
+          name: 'Mina Khatun',
+          lastMessage:
+              'Organic manure options list has been submitted for subsidy.',
+          time: '2m ago',
+          imageUrl:
+              'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=150&q=80',
+          isOnline: false,
+          isUrgent: false,
+          cropContext: 'Paddy • South Block',
+          role: 'buyer',
+          messages: [
+            ChatMessage(
+              text: "Can I use compost manure instead of chemical fertilizer?",
+              isMe: false,
+              time: DateTime.now().subtract(const Duration(hours: 2)),
+            ),
+            ChatMessage(
+              text:
+                  "Absolutely, compost is highly recommended for Clayey paddy soil. I will provide the list.",
+              isMe: true,
+              time: DateTime.now().subtract(const Duration(hours: 1)),
+            ),
+            ChatMessage(
+              text: "Organic manure options list has been submitted for subsidy.",
+              isMe: false,
+              time: DateTime.now().subtract(const Duration(minutes: 2)),
+            ),
+          ],
+        ),
+        FarmerChat(
+          id: '3',
+          name: 'Kabir Uddin',
+          lastMessage: 'Ok thanks, I will discuss this with the local Officer.',
+          time: '15m ago',
+          imageUrl:
+              'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=150&q=80',
+          isOnline: true,
+          isUrgent: false,
+          cropContext: 'Mustard • West Block',
+          role: 'govt',
+          messages: [
+            ChatMessage(
+              text: "Do we have any intercropping circular benefits?",
+              isMe: false,
+              time: DateTime.now().subtract(const Duration(hours: 4)),
+            ),
+            ChatMessage(
+              text:
+                  "Yes, mustard intercropped with wheat provides pest insulation. Circular benefits are available.",
+              isMe: true,
+              time: DateTime.now().subtract(const Duration(hours: 3)),
+            ),
+            ChatMessage(
+              text: "Ok thanks, I will discuss this with the local Officer.",
+              isMe: false,
+              time: DateTime.now().subtract(const Duration(minutes: 15)),
+            ),
+          ],
+        ),
+      ];
+    return _globalChatRooms!;
+  }
 
   @override
   State<ExpertChatScreen> createState() => _ExpertChatScreenState();
@@ -68,115 +177,59 @@ class _ExpertChatScreenState extends State<ExpertChatScreen> {
 
   FarmerChat? _selectedChat;
   String _searchQuery = "";
-  String _selectedRoleFilter = "All";
-
-  late List<FarmerChat> _chatRooms;
 
   @override
   void initState() {
     super.initState();
-    // Default chat rooms seeding
-    _chatRooms = [
-      FarmerChat(
-        id: '1',
-        name: 'Selim Rahman',
-        lastMessage:
-            'The yellow spots are spreading to lower leaves. What should I spray?',
-        time: 'Typing...',
-        imageUrl:
-            'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=150&q=80',
-        isOnline: true,
-        isUrgent: true,
-        cropContext: 'Wheat • North Acre Area',
-        role: 'farmer',
-        messages: [
-          ChatMessage(
-            text: "Hello Doctor, I recently uploaded soil reports.",
-            isMe: false,
-            time: DateTime.now().subtract(const Duration(minutes: 20)),
-          ),
-          ChatMessage(
-            text:
-                "Thanks Selim, I reviewed the report. Nitrogen is slightly low, but the visual leaf symptoms look like early-stage Rust disease.",
-            isMe: true,
-            time: DateTime.now().subtract(const Duration(minutes: 15)),
-          ),
-          ChatMessage(
-            text:
-                "The yellow spots are spreading to lower leaves. What should I spray?",
-            isMe: false,
-            time: DateTime.now().subtract(const Duration(minutes: 2)),
-          ),
-        ],
-      ),
-      FarmerChat(
-        id: '2',
-        name: 'Mina Khatun',
-        lastMessage:
-            'Organic manure options list has been submitted for subsidy.',
-        time: '2m ago',
-        imageUrl:
-            'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=150&q=80',
-        isOnline: false,
-        isUrgent: false,
-        cropContext: 'Paddy • South Block',
-        role: 'buyer',
-        messages: [
-          ChatMessage(
-            text: "Can I use compost manure instead of chemical fertilizer?",
-            isMe: false,
-            time: DateTime.now().subtract(const Duration(hours: 2)),
-          ),
-          ChatMessage(
-            text:
-                "Absolutely, compost is highly recommended for Clayey paddy soil. I will provide the list.",
-            isMe: true,
-            time: DateTime.now().subtract(const Duration(hours: 1)),
-          ),
-          ChatMessage(
-            text: "Organic manure options list has been submitted for subsidy.",
-            isMe: false,
-            time: DateTime.now().subtract(const Duration(minutes: 2)),
-          ),
-        ],
-      ),
-      FarmerChat(
-        id: '3',
-        name: 'Kabir Uddin',
-        lastMessage: 'Ok thanks, I will discuss this with the local Officer.',
-        time: '15m ago',
-        imageUrl:
-            'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=150&q=80',
-        isOnline: true,
-        isUrgent: false,
-        cropContext: 'Mustard • West Block',
-        role: 'govt',
-        messages: [
-          ChatMessage(
-            text: "Do we have any intercropping circular benefits?",
-            isMe: false,
-            time: DateTime.now().subtract(const Duration(hours: 4)),
-          ),
-          ChatMessage(
-            text:
-                "Yes, mustard intercropped with wheat provides pest insulation. Circular benefits are available.",
-            isMe: true,
-            time: DateTime.now().subtract(const Duration(hours: 3)),
-          ),
-          ChatMessage(
-            text: "Ok thanks, I will discuss this with the local Officer.",
-            isMe: false,
-            time: DateTime.now().subtract(const Duration(minutes: 15)),
-          ),
-        ],
-      ),
-    ];
+    _handleInitialRedirection();
+  }
 
-    if (widget.initialChatId != null) {
-      _selectedChat = _chatRooms.firstWhere(
-        (element) => element.id == widget.initialChatId,
-        orElse: () => _chatRooms[0],
+  @override
+  void didUpdateWidget(covariant ExpertChatScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    _handleInitialRedirection();
+  }
+
+  void _handleInitialRedirection() {
+    if (widget.initialFarmerName != null) {
+      final name = widget.initialFarmerName!;
+      final idx = ExpertChatScreen.chatRooms.indexWhere(
+        (element) => element.name.toLowerCase() == name.toLowerCase(),
       );
+      if (idx != -1) {
+        _selectedChat = ExpertChatScreen.chatRooms[idx];
+      } else {
+        // Create new dynamic chat room matching farmer details
+        final newRoom = FarmerChat(
+          id: DateTime.now().millisecondsSinceEpoch.toString(),
+          name: name,
+          lastMessage: 'Consultation chat initialized.',
+          time: 'Just now',
+          imageUrl: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80',
+          isOnline: true,
+          isUrgent: false,
+          cropContext: 'Consultation • Active Session',
+          role: 'farmer',
+          messages: [
+            ChatMessage(
+              text: "Hi Doctor, I clicked Message from our consultation booking.",
+              isMe: false,
+              time: DateTime.now(),
+            ),
+          ],
+        );
+        ExpertChatScreen.chatRooms.add(newRoom);
+        _selectedChat = newRoom;
+      }
+      _scrollToBottom();
+    } else if (widget.initialChatId != null) {
+      final idx = ExpertChatScreen.chatRooms.indexWhere(
+        (element) => element.id == widget.initialChatId,
+      );
+      if (idx != -1) {
+        _selectedChat = ExpertChatScreen.chatRooms[idx];
+      }
+      _scrollToBottom();
     }
   }
 
@@ -227,6 +280,113 @@ class _ExpertChatScreenState extends State<ExpertChatScreen> {
     });
   }
 
+  void _showImageUploadDialog() {
+    final List<String> cropImages = [
+      'https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1530595467537-0b5996c41f2d?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1463123081488-729f555e3f7b?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1595974482597-4b8da8879bc5?auto=format&fit=crop&w=800&q=80',
+    ];
+    
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        return Container(
+          decoration: const BoxDecoration(
+            color: Color(0xFF122131),
+            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                "Upload Diagnostic Image",
+                style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                "Choose standard diagnostic photo preset:",
+                style: TextStyle(color: Colors.white70, fontSize: 12),
+              ),
+              const SizedBox(height: 12),
+              SizedBox(
+                height: 70,
+                child: ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: cropImages.length,
+                  itemBuilder: (context, index) {
+                    final imgUrl = cropImages[index];
+                    return GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          _selectedChat!.messages.add(
+                            ChatMessage(
+                              text: "Advisory photo attachment sent.",
+                              isMe: true,
+                              time: DateTime.now(),
+                              imagePath: imgUrl,
+                            ),
+                          );
+                        });
+                        Navigator.pop(context);
+                        _scrollToBottom();
+                      },
+                      child: Container(
+                        width: 70,
+                        margin: const EdgeInsets.only(right: 8),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(8),
+                          image: DecorationImage(
+                            image: NetworkImage(imgUrl),
+                            fit: BoxFit.cover,
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                "Or enter custom image URL:",
+                style: TextStyle(color: Colors.white70, fontSize: 12),
+              ),
+              const SizedBox(height: 8),
+              TextField(
+                onSubmitted: (val) {
+                  if (val.trim().isNotEmpty) {
+                    setState(() {
+                      _selectedChat!.messages.add(
+                        ChatMessage(
+                          text: "Advisory photo attachment sent.",
+                          isMe: true,
+                          time: DateTime.now(),
+                          imagePath: val.trim(),
+                        ),
+                      );
+                    });
+                    Navigator.pop(context);
+                    _scrollToBottom();
+                  }
+                },
+                style: const TextStyle(color: Colors.white, fontSize: 13),
+                decoration: const InputDecoration(
+                  hintText: "https://example.com/crop.jpg",
+                  hintStyle: TextStyle(color: Colors.grey),
+                  enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: Colors.white24)),
+                  focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: Color(0xFF54E167))),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_selectedChat != null) {
@@ -238,15 +398,13 @@ class _ExpertChatScreenState extends State<ExpertChatScreen> {
 
   Widget _buildChatRoomsListView() {
     final filteredRooms =
-        _chatRooms.where((room) {
+        ExpertChatScreen.chatRooms.where((room) {
           final matchesSearch =
               room.name.toLowerCase().contains(_searchQuery.toLowerCase()) ||
               room.cropContext.toLowerCase().contains(
                 _searchQuery.toLowerCase(),
               );
-          final matchesRole =
-              _selectedRoleFilter == "All" || room.role == _selectedRoleFilter;
-          return matchesSearch && matchesRole;
+          return matchesSearch;
         }).toList();
 
     Widget body = Column(
@@ -281,44 +439,6 @@ class _ExpertChatScreenState extends State<ExpertChatScreen> {
             ),
           ),
         ),
-
-        // Horizontal Role Filter
-        SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 4.0),
-          child: Row(
-            children: [
-              {'label': 'All', 'value': 'All'},
-              {'label': 'Farmers', 'value': 'farmer'},
-              {'label': 'Buyers', 'value': 'buyer'},
-              {'label': 'Govt Officers', 'value': 'govt'},
-            ].map((filter) {
-              final isSelected = _selectedRoleFilter == filter['value'];
-              return Padding(
-                padding: const EdgeInsets.only(right: 8.0),
-                child: ChoiceChip(
-                  label: Text(filter['label']!),
-                  selected: isSelected,
-                  selectedColor: primary.withValues(alpha: 0.2),
-                  backgroundColor: surfaceContainer,
-                  labelStyle: TextStyle(
-                    color: isSelected ? primary : Colors.white70,
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                  ),
-                  onSelected: (val) {
-                    if (val) {
-                      setState(() {
-                        _selectedRoleFilter = filter['value']!;
-                      });
-                    }
-                  },
-                ),
-              );
-            }).toList(),
-          ),
-        ),
-        const SizedBox(height: 8),
 
         Expanded(
           child:
@@ -363,21 +483,6 @@ class _ExpertChatScreenState extends State<ExpertChatScreen> {
               fontSize: 22,
               fontWeight: FontWeight.bold,
               color: onBackground,
-            ),
-          ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            decoration: BoxDecoration(
-              color: primaryContainer,
-              borderRadius: BorderRadius.circular(6),
-            ),
-            child: const Text(
-              'LIVE CONNECT',
-              style: TextStyle(
-                fontSize: 9,
-                fontWeight: FontWeight.bold,
-                color: Color(0xFF00390E),
-              ),
             ),
           ),
         ],
@@ -548,6 +653,7 @@ class _ExpertChatScreenState extends State<ExpertChatScreen> {
 
             // Chat input
             _buildChatInputBar(),
+            if (widget.isEmbedded) const SizedBox(height: 80),
           ],
         ),
       ),
@@ -580,9 +686,32 @@ class _ExpertChatScreenState extends State<ExpertChatScreen> {
               width: 1,
             ),
           ),
-          child: Text(
-            msg.text,
-            style: TextStyle(fontSize: 14, color: onBackground, height: 1.4),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (msg.imagePath != null) ...[
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: AppConstants.buildNetworkImage(
+                    context: context,
+                    url: msg.imagePath!,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) => Container(
+                      height: 120,
+                      color: Colors.black26,
+                      child: const Center(
+                        child: Icon(Icons.broken_image, color: Colors.grey),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 8),
+              ],
+              Text(
+                msg.text,
+                style: TextStyle(fontSize: 14, color: onBackground, height: 1.4),
+              ),
+            ],
           ),
         ),
       ),
@@ -598,6 +727,12 @@ class _ExpertChatScreenState extends State<ExpertChatScreen> {
       ),
       child: Row(
         children: [
+          IconButton(
+            icon: Icon(Icons.add_circle_outline, color: primary),
+            onPressed: _showImageUploadDialog,
+            tooltip: "Add Image Attachment",
+          ),
+          const SizedBox(width: 8),
           Expanded(
             child: TextField(
               controller: _msgController,

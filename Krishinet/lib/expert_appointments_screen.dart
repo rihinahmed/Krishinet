@@ -65,7 +65,8 @@ class GlassCard extends StatelessWidget {
 
 class ExpertAppointmentsScreen extends StatefulWidget {
   final bool isEmbedded;
-  const ExpertAppointmentsScreen({super.key, this.isEmbedded = false});
+  final Function(int tabIndex, String farmerName)? onNavigateToTab;
+  const ExpertAppointmentsScreen({super.key, this.isEmbedded = false, this.onNavigateToTab});
 
   @override
   State<ExpertAppointmentsScreen> createState() =>
@@ -108,6 +109,68 @@ class _ExpertAppointmentsScreenState extends State<ExpertAppointmentsScreen> {
       'status': 'Completed',
     },
   ];
+
+  Future<void> _rescheduleAppointment(Map<String, String> app) async {
+    final DateTime? pickedDate = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime.now().subtract(const Duration(days: 365)),
+      lastDate: DateTime.now().add(const Duration(days: 365)),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: const ColorScheme.dark(
+              primary: AppColors.primary,
+              onPrimary: Color(0xFF00390E),
+              surface: AppColors.surfaceContainer,
+              onSurface: Colors.white,
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+
+    if (pickedDate == null) return;
+
+    if (!mounted) return;
+
+    final TimeOfDay? pickedTime = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.now(),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: const ColorScheme.dark(
+              primary: AppColors.primary,
+              onPrimary: Color(0xFF00390E),
+              surface: AppColors.surfaceContainer,
+              onSurface: Colors.white,
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+
+    if (pickedTime == null) return;
+
+    if (!mounted) return;
+
+    final formattedDate = "${pickedDate.year}-${pickedDate.month.toString().padLeft(2, '0')}-${pickedDate.day.toString().padLeft(2, '0')}";
+    final formattedTime = pickedTime.format(context);
+
+    setState(() {
+      app['time'] = "$formattedDate, $formattedTime";
+    });
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text("Consultation successfully rescheduled to $formattedDate at $formattedTime!"),
+        backgroundColor: AppColors.primary,
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -175,7 +238,7 @@ class _ExpertAppointmentsScreenState extends State<ExpertAppointmentsScreen> {
                             style: TextStyle(color: Colors.grey),
                           ),
                         )
-                        : ListView.builder(
+                      : ListView.builder(
                           itemCount: filtered.length,
                           itemBuilder: (context, idx) {
                             final app = filtered[idx];
@@ -248,21 +311,27 @@ class _ExpertAppointmentsScreenState extends State<ExpertAppointmentsScreen> {
                                             MainAxisAlignment.end,
                                         children: [
                                           TextButton(
-                                            onPressed: () {
-                                              ScaffoldMessenger.of(
-                                                context,
-                                              ).showSnackBar(
-                                                const SnackBar(
-                                                  content: Text(
-                                                    "Rescheduling request sent to farmer.",
-                                                  ),
-                                                ),
-                                              );
-                                            },
+                                            onPressed: () => _rescheduleAppointment(app),
                                             child: const Text(
                                               "Reschedule",
                                               style: TextStyle(
-                                                color: Colors.grey,
+                                                color: Colors.white70,
+                                              ),
+                                            ),
+                                          ),
+                                          const Spacer(),
+                                          IconButton(
+                                            icon: const Icon(Icons.message_outlined, color: AppColors.primary, size: 18),
+                                            tooltip: "Message Farmer",
+                                            onPressed: () {
+                                              if (widget.onNavigateToTab != null) {
+                                                widget.onNavigateToTab!(2, app['farmer']!);
+                                              }
+                                            },
+                                            style: IconButton.styleFrom(
+                                              backgroundColor: AppColors.surfaceContainerHigh,
+                                              shape: RoundedRectangleBorder(
+                                                borderRadius: BorderRadius.circular(8),
                                               ),
                                             ),
                                           ),

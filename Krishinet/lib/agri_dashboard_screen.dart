@@ -78,6 +78,7 @@ class KrishinetDashboard extends StatefulWidget {
 class _KrishinetDashboardState extends State<KrishinetDashboard> {
   int _selectedIndex = 0;
   bool _hasNotifications = true;
+  String? _selectedFarmerName;
   final List<Map<String, String>> _notifications = [
     {
       'title': '🚨 Critical Outbreak Alert',
@@ -305,9 +306,23 @@ class _KrishinetDashboardState extends State<KrishinetDashboard> {
           ],
         );
       case 1:
-        return const ExpertAppointmentsScreen(isEmbedded: true);
+        return ExpertAppointmentsScreen(
+          isEmbedded: true,
+          onNavigateToTab: (index, farmerName) {
+            setState(() {
+              _selectedFarmerName = farmerName;
+              _selectedIndex = index;
+            });
+          },
+        );
       case 2:
-        return const ExpertChatScreen(isEmbedded: true);
+        final currentFarmerName = _selectedFarmerName;
+        // Clean selected farmer name after passing it to avoid locking view
+        _selectedFarmerName = null;
+        return ExpertChatScreen(
+          isEmbedded: true,
+          initialFarmerName: currentFarmerName,
+        );
       case 3:
         return const GovtPortalScreen(isEmbedded: true);
       case 4:
@@ -1729,8 +1744,10 @@ class _ExpertToolkitSectionState extends State<ExpertToolkitSection> {
   void _vaccineTrainingSheet() {
     String type = 'Vaccination Programme';
     DateTime? selectedDate;
+    TimeOfDay? selectedTime;
     StateSetter? modalState;
     final dateCtrl = TextEditingController();
+    final timeCtrl = TextEditingController();
     final villageCtrl = TextEditingController();
     final thanaCtrl = TextEditingController();
     final upazilaCtrl = TextEditingController();
@@ -1753,10 +1770,206 @@ class _ExpertToolkitSectionState extends State<ExpertToolkitSection> {
       return "$day-$month-$year";
     }
 
+    String formatTime(TimeOfDay tod) {
+      final hour = tod.hourOfPeriod == 0 ? 12 : tod.hourOfPeriod;
+      final minute = tod.minute.toString().padLeft(2, '0');
+      final period = tod.period == DayPeriod.am ? 'AM' : 'PM';
+      return "${hour.toString().padLeft(2, '0')}:$minute $period";
+    }
+
+    pw.Widget _buildPosterPdfRow(String label, String value) {
+      return pw.Padding(
+        padding: const pw.EdgeInsets.symmetric(vertical: 6),
+        child: pw.Row(
+          crossAxisAlignment: pw.CrossAxisAlignment.start,
+          children: [
+            pw.SizedBox(
+              width: 120,
+              child: pw.Text(
+                label,
+                style: pw.TextStyle(
+                  color: PdfColor.fromHex("#54e167"),
+                  fontWeight: pw.FontWeight.bold,
+                  fontSize: 12,
+                ),
+              ),
+            ),
+            pw.Expanded(
+              child: pw.Text(
+                value,
+                style: const pw.TextStyle(
+                  color: PdfColors.white,
+                  fontSize: 12,
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    Future<void> _generatePosterPdf({
+      required String category,
+      required String headline,
+      required String date,
+      required String time,
+      required String village,
+      required String thana,
+      required String upazila,
+      required String district,
+      required String objective,
+      required String species,
+      required String seats,
+      required bool needsSeats,
+    }) async {
+      final pdf = pw.Document();
+
+      pdf.addPage(
+        pw.Page(
+          pageFormat: PdfPageFormat.a4,
+          margin: pw.EdgeInsets.zero,
+          build: (pw.Context context) {
+            return pw.Container(
+              decoration: const pw.BoxDecoration(
+                color: PdfColor.fromInt(0xFF051424),
+              ),
+              padding: const pw.EdgeInsets.all(32),
+              child: pw.Container(
+                decoration: pw.BoxDecoration(
+                  border: pw.Border.all(
+                    color: const PdfColor.fromInt(0xFF54E167),
+                    width: 4,
+                  ),
+                  borderRadius: const pw.BorderRadius.all(pw.Radius.circular(16)),
+                ),
+                child: pw.Column(
+                  crossAxisAlignment: pw.CrossAxisAlignment.stretch,
+                  children: [
+                    pw.Container(
+                      color: const PdfColor.fromInt(0xFF54E167),
+                      padding: const pw.EdgeInsets.symmetric(vertical: 20),
+                      child: pw.Center(
+                        child: pw.Text(
+                          category.toUpperCase(),
+                          style: pw.TextStyle(
+                            color: const PdfColor.fromInt(0xFF00390E),
+                            fontWeight: pw.FontWeight.bold,
+                            fontSize: 20,
+                          ),
+                        ),
+                      ),
+                    ),
+                    pw.SizedBox(height: 32),
+                    pw.Center(
+                      child: pw.Container(
+                        width: 48,
+                        height: 48,
+                        decoration: const pw.BoxDecoration(
+                          color: PdfColor.fromInt(0xFF54E167),
+                          shape: pw.BoxShape.circle,
+                        ),
+                        child: pw.Center(
+                          child: pw.Text(
+                            "E",
+                            style: pw.TextStyle(
+                              fontSize: 24,
+                              color: const PdfColor.fromInt(0xFF00390E),
+                              fontWeight: pw.FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    pw.SizedBox(height: 24),
+                    pw.Padding(
+                      padding: const pw.EdgeInsets.symmetric(horizontal: 24),
+                      child: pw.Text(
+                        headline,
+                        textAlign: pw.TextAlign.center,
+                        style: pw.TextStyle(
+                          fontSize: 22,
+                          fontWeight: pw.FontWeight.bold,
+                          color: PdfColors.white,
+                        ),
+                      ),
+                    ),
+                    pw.SizedBox(height: 32),
+                    pw.Padding(
+                      padding: const pw.EdgeInsets.symmetric(horizontal: 24),
+                      child: pw.Container(
+                        decoration: pw.BoxDecoration(
+                          color: const PdfColor.fromInt(0xFF122131),
+                          borderRadius: const pw.BorderRadius.all(pw.Radius.circular(12)),
+                          border: pw.Border.all(color: PdfColors.white, width: 0.5),
+                        ),
+                        padding: const pw.EdgeInsets.all(20),
+                        child: pw.Column(
+                          children: [
+                            _buildPosterPdfRow("DATE", date),
+                            pw.Divider(color: PdfColors.grey700, thickness: 0.5),
+                            _buildPosterPdfRow("TIME", time),
+                            pw.Divider(color: PdfColors.grey700, thickness: 0.5),
+                            _buildPosterPdfRow(
+                              "VENUE",
+                              "$village, $thana, $upazila, $district",
+                            ),
+                            pw.Divider(color: PdfColors.grey700, thickness: 0.5),
+                            _buildPosterPdfRow("OBJECTIVE", objective),
+                            if (species.isNotEmpty) ...[
+                              pw.Divider(color: PdfColors.grey700, thickness: 0.5),
+                              _buildPosterPdfRow("TARGETED SPECIES", species),
+                            ],
+                            if (needsSeats) ...[
+                              pw.Divider(color: PdfColors.grey700, thickness: 0.5),
+                              _buildPosterPdfRow("MAX SEATS", seats),
+                            ],
+                          ],
+                        ),
+                      ),
+                    ),
+                    pw.Spacer(),
+                    pw.Padding(
+                      padding: const pw.EdgeInsets.all(24),
+                      child: pw.Column(
+                        children: [
+                          pw.Text(
+                            "ORGANIZED BY KRISHINET AGRI-EXPERT TEAM",
+                            style: pw.TextStyle(
+                              fontSize: 12,
+                              fontWeight: pw.FontWeight.bold,
+                              color: const PdfColor.fromInt(0xFF54E167),
+                            ),
+                          ),
+                          pw.SizedBox(height: 8),
+                          pw.Text(
+                            "ALL LOCAL FARMERS ARE INVITED TO PARTICIPATE AND BENEFIT",
+                            style: const pw.TextStyle(
+                              fontSize: 10,
+                              color: PdfColors.grey400,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        ),
+      );
+
+      await Printing.layoutPdf(
+        onLayout: (PdfPageFormat format) async => pdf.save(),
+        name: "program_poster_${headline.replaceAll(' ', '_')}.pdf",
+      );
+    }
+
     void showPosterDialog(
       String category,
       String headline,
       String date,
+      String time,
       String village,
       String thana,
       String upazila,
@@ -1877,6 +2090,8 @@ class _ExpertToolkitSectionState extends State<ExpertToolkitSection> {
                             children: [
                               buildPosterRow(Icons.calendar_today, "DATE", date),
                               const Divider(color: Colors.white12, height: 16),
+                              buildPosterRow(Icons.access_time, "TIME", time),
+                              const Divider(color: Colors.white12, height: 16),
                               buildPosterRow(
                                 Icons.location_on,
                                 "VENUE",
@@ -1892,7 +2107,7 @@ class _ExpertToolkitSectionState extends State<ExpertToolkitSection> {
                                   species,
                                 ),
                               ],
-                              if (type == 'Farmer Training Class' || type == 'Skill Workshop') ...[
+                              if (category == 'Farmer Training Class' || category == 'Skill Workshop') ...[
                                 const Divider(color: Colors.white12, height: 16),
                                 buildPosterRow(
                                   Icons.event_seat,
@@ -1935,18 +2150,26 @@ class _ExpertToolkitSectionState extends State<ExpertToolkitSection> {
                           ),
                         ),
                         ElevatedButton.icon(
-                          onPressed: () {
+                          onPressed: () async {
                             Navigator.pop(context);
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text("Poster sent to local printing service successfully!"),
-                                backgroundColor: Color(0xFF2CC04B),
-                                behavior: SnackBarBehavior.floating,
-                              ),
+                            final needsSeats = (category == 'Farmer Training Class' || category == 'Skill Workshop');
+                            await _generatePosterPdf(
+                              category: category,
+                              headline: headline,
+                              date: date,
+                              time: time,
+                              village: village,
+                              thana: thana,
+                              upazila: upazila,
+                              district: district,
+                              objective: objective,
+                              species: species,
+                              seats: seatsCtrl.text.trim(),
+                              needsSeats: needsSeats,
                             );
                           },
-                          icon: const Icon(Icons.print),
-                          label: const Text("Print Now"),
+                          icon: const Icon(Icons.picture_as_pdf),
+                          label: const Text("Print PDF"),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xFF54E167),
                             foregroundColor: const Color(0xFF00390E),
@@ -2003,55 +2226,114 @@ class _ExpertToolkitSectionState extends State<ExpertToolkitSection> {
                       ),
                     ],
                     const SizedBox(height: 12),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                    Row(
                       children: [
-                        const Text(
-                          "Scheduled Date * (DDMMYYYY)",
-                          style: TextStyle(
-                            color: AppColors.onSurfaceVariant,
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold,
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                "Scheduled Date * (DDMMYYYY)",
+                                style: TextStyle(
+                                  color: AppColors.onSurfaceVariant,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              const SizedBox(height: 6),
+                              TextField(
+                                controller: dateCtrl,
+                                readOnly: true,
+                                style: const TextStyle(color: Colors.white, fontSize: 13),
+                                onTap: () async {
+                                  final now = DateTime.now();
+                                  final DateTime? picked = await showDatePicker(
+                                    context: context,
+                                    initialDate: selectedDate ?? now,
+                                    firstDate: DateTime(now.year, now.month, now.day),
+                                    lastDate: now.add(const Duration(days: 365 * 5)),
+                                  );
+                                  if (picked != null) {
+                                    setModalState(() {
+                                      selectedDate = picked;
+                                      dateCtrl.text = formatDate(picked);
+                                    });
+                                  }
+                                },
+                                decoration: InputDecoration(
+                                  hintText: "DD-MM-YYYY",
+                                  hintStyle: const TextStyle(color: Colors.grey, fontSize: 13),
+                                  filled: true,
+                                  fillColor: AppColors.surfaceContainer,
+                                  contentPadding: const EdgeInsets.symmetric(
+                                    horizontal: 14,
+                                    vertical: 10,
+                                  ),
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                    borderSide: BorderSide.none,
+                                  ),
+                                  suffixIcon: const Icon(
+                                    Icons.calendar_today,
+                                    color: AppColors.primary,
+                                    size: 18,
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
                         ),
-                        const SizedBox(height: 6),
-                        TextField(
-                          controller: dateCtrl,
-                          readOnly: true,
-                          style: const TextStyle(color: Colors.white, fontSize: 13),
-                          onTap: () async {
-                            final now = DateTime.now();
-                            final DateTime? picked = await showDatePicker(
-                              context: context,
-                              initialDate: selectedDate ?? now,
-                              firstDate: DateTime(now.year, now.month, now.day),
-                              lastDate: now.add(const Duration(days: 365 * 5)),
-                            );
-                            if (picked != null) {
-                              setModalState(() {
-                                selectedDate = picked;
-                                dateCtrl.text = formatDate(picked);
-                              });
-                            }
-                          },
-                          decoration: InputDecoration(
-                            hintText: "DD-MM-YYYY",
-                            hintStyle: const TextStyle(color: Colors.grey, fontSize: 13),
-                            filled: true,
-                            fillColor: AppColors.surfaceContainer,
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 14,
-                              vertical: 10,
-                            ),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8),
-                              borderSide: BorderSide.none,
-                            ),
-                            suffixIcon: const Icon(
-                              Icons.calendar_today,
-                              color: AppColors.primary,
-                              size: 18,
-                            ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                "Scheduled Time * (12HRS)",
+                                style: TextStyle(
+                                  color: AppColors.onSurfaceVariant,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              const SizedBox(height: 6),
+                              TextField(
+                                controller: timeCtrl,
+                                readOnly: true,
+                                style: const TextStyle(color: Colors.white, fontSize: 13),
+                                onTap: () async {
+                                  final TimeOfDay? picked = await showTimePicker(
+                                    context: context,
+                                    initialTime: selectedTime ?? TimeOfDay.now(),
+                                  );
+                                  if (picked != null) {
+                                    setModalState(() {
+                                      selectedTime = picked;
+                                      timeCtrl.text = formatTime(picked);
+                                    });
+                                  }
+                                },
+                                decoration: InputDecoration(
+                                  hintText: "HH:MM AM/PM",
+                                  hintStyle: const TextStyle(color: Colors.grey, fontSize: 13),
+                                  filled: true,
+                                  fillColor: AppColors.surfaceContainer,
+                                  contentPadding: const EdgeInsets.symmetric(
+                                    horizontal: 14,
+                                    vertical: 10,
+                                  ),
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                    borderSide: BorderSide.none,
+                                  ),
+                                  suffixIcon: const Icon(
+                                    Icons.access_time,
+                                    color: AppColors.primary,
+                                    size: 18,
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       ],
@@ -2124,6 +2406,7 @@ class _ExpertToolkitSectionState extends State<ExpertToolkitSection> {
                           child: OutlinedButton.icon(
                             onPressed: () {
                               final date = dateCtrl.text.trim();
+                              final time = timeCtrl.text.trim();
                               final village = villageCtrl.text.trim();
                               final thana = thanaCtrl.text.trim();
                               final upazila = upazilaCtrl.text.trim();
@@ -2133,6 +2416,7 @@ class _ExpertToolkitSectionState extends State<ExpertToolkitSection> {
                               final seats = seatsCtrl.text.trim();
 
                               if (date.isEmpty ||
+                                  time.isEmpty ||
                                   village.isEmpty ||
                                   thana.isEmpty ||
                                   upazila.isEmpty ||
@@ -2165,6 +2449,7 @@ class _ExpertToolkitSectionState extends State<ExpertToolkitSection> {
                                 type,
                                 headline,
                                 date,
+                                time,
                                 village,
                                 thana,
                                 upazila,
@@ -2190,6 +2475,7 @@ class _ExpertToolkitSectionState extends State<ExpertToolkitSection> {
                           child: ElevatedButton(
                             onPressed: () {
                               final date = dateCtrl.text.trim();
+                              final time = timeCtrl.text.trim();
                               final village = villageCtrl.text.trim();
                               final thana = thanaCtrl.text.trim();
                               final upazila = upazilaCtrl.text.trim();
@@ -2199,6 +2485,7 @@ class _ExpertToolkitSectionState extends State<ExpertToolkitSection> {
                               final seats = seatsCtrl.text.trim();
 
                               if (date.isEmpty ||
+                                  time.isEmpty ||
                                   village.isEmpty ||
                                   thana.isEmpty ||
                                   upazila.isEmpty ||
@@ -2426,6 +2713,11 @@ class _ExpertToolkitSectionState extends State<ExpertToolkitSection> {
     final nCtrl = TextEditingController(text: "15");
     final pCtrl = TextEditingController(text: "22");
     final kCtrl = TextEditingController(text: "85");
+    final humidityCtrl = TextEditingController(text: "65");
+    final moistureCtrl = TextEditingController(text: "35");
+    final tempCtrl = TextEditingController(text: "28");
+    final carbonCtrl = TextEditingController(text: "0.4");
+    final ecCtrl = TextEditingController(text: "1.2");
     String output = "";
 
     showModalBottomSheet(
@@ -2442,92 +2734,158 @@ class _ExpertToolkitSectionState extends State<ExpertToolkitSection> {
               child: _bottomSheetContainer(
                 title: "Deliver Soil Testing & Recommendations",
                 icon: Icons.science,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Expanded(
-                          child: _buildTextField(
-                            "Soil pH Level",
-                            phCtrl,
-                            keyboardType: TextInputType.number,
+                child: SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _buildTextField(
+                              "Soil pH Level",
+                              phCtrl,
+                              keyboardType: TextInputType.number,
+                            ),
                           ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: _buildTextField(
-                            "Nitrogen N (ppm)",
-                            nCtrl,
-                            keyboardType: TextInputType.number,
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: _buildTextField(
+                              "Nitrogen N (ppm)",
+                              nCtrl,
+                              keyboardType: TextInputType.number,
+                            ),
                           ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: _buildTextField(
-                            "Phosphorus P (ppm)",
-                            pCtrl,
-                            keyboardType: TextInputType.number,
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: _buildTextField(
-                            "Potassium K (ppm)",
-                            kCtrl,
-                            keyboardType: TextInputType.number,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    if (output.isNotEmpty)
-                      Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.all(16),
-                        margin: const EdgeInsets.only(bottom: 16),
-                        decoration: BoxDecoration(
-                          color: AppColors.surfaceContainerHigh,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: AppColors.primary.withValues(alpha: 0.3),
-                          ),
-                        ),
-                        child: Text(
-                          output,
-                          style: const TextStyle(
-                            fontSize: 13,
-                            height: 1.4,
-                            color: Colors.white,
-                          ),
-                        ),
+                        ],
                       ),
-                    _buildSubmitButton("Generate Soil Diagnostics", () {
-                      final ph = double.tryParse(phCtrl.text) ?? 6.0;
-                      final n = double.tryParse(nCtrl.text) ?? 15.0;
-                      final p = double.tryParse(pCtrl.text) ?? 20.0;
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _buildTextField(
+                              "Phosphorus P (ppm)",
+                              pCtrl,
+                              keyboardType: TextInputType.number,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: _buildTextField(
+                              "Potassium K (ppm)",
+                              kCtrl,
+                              keyboardType: TextInputType.number,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _buildTextField(
+                              "Humidity (%)",
+                              humidityCtrl,
+                              keyboardType: TextInputType.number,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: _buildTextField(
+                              "Soil Moisture (%)",
+                              moistureCtrl,
+                              keyboardType: TextInputType.number,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _buildTextField(
+                              "Temperature (°C)",
+                              tempCtrl,
+                              keyboardType: TextInputType.number,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: _buildTextField(
+                              "Organic Carbon (%)",
+                              carbonCtrl,
+                              keyboardType: TextInputType.number,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      _buildTextField(
+                        "Electrical Conductivity (dS/m)",
+                        ecCtrl,
+                        keyboardType: TextInputType.number,
+                      ),
+                      const SizedBox(height: 16),
+                      if (output.isNotEmpty)
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(16),
+                          margin: const EdgeInsets.only(bottom: 16),
+                          decoration: BoxDecoration(
+                            color: AppColors.surfaceContainerHigh,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: AppColors.primary.withValues(alpha: 0.3),
+                            ),
+                          ),
+                          child: Text(
+                            output,
+                            style: const TextStyle(
+                              fontSize: 13,
+                              height: 1.4,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                      _buildSubmitButton("Generate Soil Diagnostics", () {
+                        final ph = double.tryParse(phCtrl.text) ?? 6.2;
+                        final n = double.tryParse(nCtrl.text) ?? 15.0;
+                        final p = double.tryParse(pCtrl.text) ?? 22.0;
+                        final k = double.tryParse(kCtrl.text) ?? 85.0;
+                        final humidity = double.tryParse(humidityCtrl.text) ?? 65.0;
+                        final moisture = double.tryParse(moistureCtrl.text) ?? 35.0;
+                        final temp = double.tryParse(tempCtrl.text) ?? 28.0;
+                        final carbon = double.tryParse(carbonCtrl.text) ?? 0.4;
+                        final ec = double.tryParse(ecCtrl.text) ?? 1.2;
 
-                      setModalState(() {
-                        String pHStatus =
-                            ph < 5.5
-                                ? "Very Acidic"
-                                : (ph > 7.5 ? "Alkaline" : "Neutral/Ideal");
-                        output =
-                            "Soil Test Results analysis:\n"
-                            "• Acidic Level: $pHStatus ($ph)\n"
-                            "• Nitrogen: ${n < 20 ? 'Deficient' : 'Satisfactory'}\n"
-                            "• Phosphorus: ${p < 25 ? 'Low' : 'Adequate'}\n\n"
-                            "Recommendations:\n"
-                            "${ph < 5.5 ? '• Apply lime (Dolomite) at 400 kg/acre to neutralize acidity.\n' : ''}"
-                            "${n < 20 ? '• Add Urea or organic manure to boost Nitrogen.\n' : ''}"
-                            "• Plan crop rotation with legume crops (lentils) next season.";
-                      });
-                    }),
-                  ],
+                        setModalState(() {
+                          String pHStatus = ph < 5.5
+                              ? "Very Acidic"
+                              : (ph > 7.5 ? "Alkaline" : "Neutral/Ideal");
+                          String carbonStatus = carbon < 0.5 ? "Deficient" : "Satisfactory";
+                          String ecStatus = ec > 2.0 ? "Saline/High" : "Normal";
+                          String moistureStatus = moisture < 40 ? "Low/Dry" : "Optimal";
+
+                          output =
+                              "Soil Test & Environment Diagnostics:\n"
+                              "• pH Level: $pHStatus ($ph)\n"
+                              "• Nitrogen (N): ${n < 20 ? 'Deficient' : 'Satisfactory'} ($n ppm)\n"
+                              "• Phosphorus (P): ${p < 25 ? 'Low' : 'Adequate'} ($p ppm)\n"
+                              "• Potassium (K): ${k < 80 ? 'Low' : 'Adequate'} ($k ppm)\n"
+                              "• Air Humidity: $humidity%\n"
+                              "• Soil Moisture: $moistureStatus ($moisture%)\n"
+                              "• Temperature: $temp°C\n"
+                              "• Organic Carbon: $carbonStatus ($carbon%)\n"
+                              "• Elec. Conductivity: $ecStatus ($ec dS/m)\n\n"
+                              "Expert Recommendations:\n"
+                              "${ph < 5.5 ? '• Apply lime (Dolomite) at 400 kg/acre to neutralize acidity.\n' : ''}"
+                              "${n < 20 ? '• Add Urea or organic manure to boost Nitrogen levels.\n' : ''}"
+                              "${carbon < 0.5 ? '• Incorporate compost, green manure, or crop residues to raise Organic Carbon.\n' : ''}"
+                              "${moisture < 40 ? '• Apply light irrigation immediately; consider mulching to preserve moisture.\n' : ''}"
+                              "${ec > 2.0 ? '• Flush soil with fresh water to leach out excess salts; avoid saline groundwater.\n' : ''}"
+                              "• Rotate with leguminous crops (e.g. mungbean) to biologically enrich soil health.";
+                        });
+                      }),
+                    ],
+                  ),
                 ),
               ),
             );

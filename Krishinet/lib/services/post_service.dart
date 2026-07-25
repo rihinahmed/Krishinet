@@ -2,8 +2,8 @@ class KnowledgePost {
   final String id;
   final String authorName;
   final String authorTitle;
-  final String content;
-  final String? imagePath;
+  String content;
+  String? imagePath;
   final String date;
   int likes;
   bool isLikedByMe;
@@ -56,5 +56,17 @@ class PostService {
         likes: 0,
       ),
     );
+  }
+
+  static void editPost(String id, String content, String? imagePath) {
+    final index = posts.indexWhere((p) => p.id == id);
+    if (index != -1) {
+      posts[index].content = content;
+      posts[index].imagePath = imagePath;
+    }
+  }
+
+  static void deletePost(String id) {
+    posts.removeWhere((p) => p.id == id);
   }
 }

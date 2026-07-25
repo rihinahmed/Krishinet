@@ -79,6 +79,449 @@ class _KnowledgeBaseSectionState extends State<KnowledgeBaseSection> {
     'https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?auto=format&fit=crop&w=800&q=80', // Greenhouse
   ];
 
+  void _showCustomPhotoDialog() {
+    final urlCtrl = TextEditingController(
+      text: _selectedPresetUrl != null && !_presets.contains(_selectedPresetUrl)
+          ? _selectedPresetUrl
+          : '',
+    );
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: const Color(0xFF122131),
+          title: const Text("Enter Custom Photo URL", style: TextStyle(color: Colors.white)),
+          content: TextField(
+            controller: urlCtrl,
+            style: const TextStyle(color: Colors.white),
+            decoration: const InputDecoration(
+              hintText: "https://images.unsplash.com/... or asset path",
+              hintStyle: TextStyle(color: Colors.grey),
+              enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: Colors.white24)),
+              focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: Color(0xFF54E167))),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text("Cancel", style: TextStyle(color: Colors.grey)),
+            ),
+            TextButton(
+              onPressed: () {
+                final url = urlCtrl.text.trim();
+                setState(() {
+                  if (url.isNotEmpty) {
+                    _selectedPresetUrl = url;
+                  }
+                });
+                Navigator.pop(context);
+              },
+              child: const Text("Apply", style: TextStyle(color: Color(0xFF54E167), fontWeight: FontWeight.bold)),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showManageFeedSheet() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            final myPosts = PostService.posts
+                .where((p) => p.authorName == "Dr. Tariq Mahmood")
+                .toList();
+            return Container(
+              decoration: const BoxDecoration(
+                color: Color(0xFF122131),
+                borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+              ),
+              padding: EdgeInsets.fromLTRB(
+                24,
+                24,
+                24,
+                MediaQuery.of(context).viewInsets.bottom + 40,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        "Manage My Suggestion Posts",
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.close, color: Colors.white70),
+                        onPressed: () => Navigator.pop(context),
+                      ),
+                    ],
+                  ),
+                  const Divider(color: Colors.white12, height: 24),
+                  if (myPosts.isEmpty)
+                    const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 40),
+                      child: Center(
+                        child: Text(
+                          "You haven't posted any suggestions yet.",
+                          style: TextStyle(color: Colors.grey),
+                        ),
+                      ),
+                    )
+                  else
+                    ConstrainedBox(
+                      constraints: const BoxConstraints(maxHeight: 400),
+                      child: ListView.separated(
+                        shrinkWrap: true,
+                        itemCount: myPosts.length,
+                        separatorBuilder: (context, index) => const Divider(color: Colors.white10),
+                        itemBuilder: (context, index) {
+                          final post = myPosts[index];
+                          return Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              if (post.imagePath != null)
+                                Container(
+                                  width: 50,
+                                  height: 50,
+                                  margin: const EdgeInsets.only(right: 12),
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(8),
+                                    image: DecorationImage(
+                                      image: NetworkImage(post.imagePath!),
+                                      fit: BoxFit.cover,
+                                    ),
+                                  ),
+                                ),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      post.content,
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: const TextStyle(color: Colors.white, fontSize: 13),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      post.date,
+                                      style: const TextStyle(color: Colors.grey, fontSize: 11),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              IconButton(
+                                icon: const Icon(Icons.edit, color: Color(0xFF54E167), size: 20),
+                                onPressed: () {
+                                  _showEditPostDialog(post, () {
+                                    setModalState(() {});
+                                    setState(() {});
+                                  });
+                                },
+                              ),
+                              IconButton(
+                                icon: const Icon(Icons.delete, color: Color(0xFFFFB4AB), size: 20),
+                                onPressed: () {
+                                  _confirmDeletePost(post.id, () {
+                                    setModalState(() {});
+                                    setState(() {});
+                                  });
+                                },
+                              ),
+                            ],
+                          );
+                        },
+                      ),
+                    ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  void _showEditPostDialog(KnowledgePost post, VoidCallback onUpdate) {
+    final editCtrl = TextEditingController(text: post.content);
+    String? editImageUrl = post.imagePath;
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              backgroundColor: const Color(0xFF122131),
+              title: const Text("Edit Advisory Post", style: TextStyle(color: Colors.white)),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    TextField(
+                      controller: editCtrl,
+                      maxLines: 4,
+                      style: const TextStyle(color: Colors.white, fontSize: 14),
+                      decoration: const InputDecoration(
+                        border: OutlineInputBorder(),
+                        focusedBorder: OutlineInputBorder(borderSide: BorderSide(color: Color(0xFF54E167))),
+                        enabledBorder: OutlineInputBorder(borderSide: BorderSide(color: Colors.white24)),
+                        hintText: "Edit content...",
+                        hintStyle: TextStyle(color: Colors.grey),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      children: [
+                        const Text("Image Option:", style: TextStyle(color: Colors.white70, fontSize: 13)),
+                        const Spacer(),
+                        TextButton(
+                          onPressed: () {
+                            final urlCtrl = TextEditingController(text: editImageUrl ?? '');
+                            showDialog(
+                              context: context,
+                              builder: (context) => AlertDialog(
+                                backgroundColor: const Color(0xFF1C2B3C),
+                                title: const Text("Set Post Image URL", style: TextStyle(color: Colors.white)),
+                                content: TextField(
+                                  controller: urlCtrl,
+                                  style: const TextStyle(color: Colors.white),
+                                  decoration: const InputDecoration(hintText: "Enter photo URL"),
+                                ),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () => Navigator.pop(context),
+                                    child: const Text("Cancel"),
+                                  ),
+                                  TextButton(
+                                    onPressed: () {
+                                      setDialogState(() {
+                                        editImageUrl = urlCtrl.text.trim().isEmpty ? null : urlCtrl.text.trim();
+                                      });
+                                      Navigator.pop(context);
+                                    },
+                                    child: const Text("Set"),
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
+                          child: const Text("Change Image", style: TextStyle(color: Color(0xFF54E167))),
+                        ),
+                      ],
+                    ),
+                    if (editImageUrl != null)
+                      Container(
+                        height: 100,
+                        width: double.infinity,
+                        margin: const EdgeInsets.only(top: 8),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(8),
+                          image: DecorationImage(
+                            image: NetworkImage(editImageUrl!),
+                            fit: BoxFit.cover,
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text("Cancel", style: TextStyle(color: Colors.grey)),
+                ),
+                TextButton(
+                  onPressed: () {
+                    if (editCtrl.text.trim().isEmpty) return;
+                    setState(() {
+                      PostService.editPost(post.id, editCtrl.text.trim(), editImageUrl);
+                    });
+                    onUpdate();
+                    Navigator.pop(context);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text("Advisory post updated successfully!"),
+                        backgroundColor: Color(0xFF54E167),
+                      ),
+                    );
+                  },
+                  child: const Text("Save", style: TextStyle(color: Color(0xFF54E167), fontWeight: FontWeight.bold)),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  void _confirmDeletePost(String id, VoidCallback onDelete) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: const Color(0xFF122131),
+          title: const Text("Delete Suggestion", style: TextStyle(color: Colors.white)),
+          content: const Text("Are you sure you want to permanently delete this suggestion post?", style: TextStyle(color: Colors.white70)),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text("Cancel", style: TextStyle(color: Colors.grey)),
+            ),
+            TextButton(
+              onPressed: () {
+                setState(() {
+                  PostService.deletePost(id);
+                });
+                onDelete();
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text("Advisory post deleted successfully!"),
+                    backgroundColor: Color(0xFFFFB4AB),
+                  ),
+                );
+              },
+              child: const Text("Delete", style: TextStyle(color: Color(0xFFFFB4AB), fontWeight: FontWeight.bold)),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showShareSheet(KnowledgePost post) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        return ClipRRect(
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+            child: Container(
+              padding: const EdgeInsets.all(24),
+              color: const Color(0xB3122131),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    "Share Advisory Post",
+                    style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 20),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    children: [
+                      _buildShareOption(
+                        icon: Icons.copy,
+                        label: "Copy Link",
+                        color: Colors.blue,
+                        onTap: () {
+                          Navigator.pop(context);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text("Link copied to clipboard!"),
+                              backgroundColor: Color(0xFF54E167),
+                            ),
+                          );
+                        },
+                      ),
+                      _buildShareOption(
+                        icon: Icons.chat,
+                        label: "WhatsApp",
+                        color: Colors.green,
+                        onTap: () {
+                          Navigator.pop(context);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text("Shared to WhatsApp successfully!"),
+                              backgroundColor: Color(0xFF54E167),
+                            ),
+                          );
+                        },
+                      ),
+                      _buildShareOption(
+                        icon: Icons.facebook,
+                        label: "Facebook",
+                        color: const Color(0xFF1877F2),
+                        onTap: () {
+                          Navigator.pop(context);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text("Shared to Facebook Feed successfully!"),
+                              backgroundColor: Color(0xFF54E167),
+                            ),
+                          );
+                        },
+                      ),
+                      _buildShareOption(
+                        icon: Icons.email,
+                        label: "Email",
+                        color: Colors.orange,
+                        onTap: () {
+                          Navigator.pop(context);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text("Email draft prepared!"),
+                              backgroundColor: Color(0xFF54E167),
+                            ),
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildShareOption({
+    required IconData icon,
+    required String label,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 50,
+            height: 50,
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.15),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, color: color, size: 24),
+          ),
+          const SizedBox(height: 8),
+          Text(label, style: const TextStyle(color: Colors.white70, fontSize: 11)),
+        ],
+      ),
+    );
+  }
+
   void _submitPost() {
     final text = _postCtrl.text.trim();
     if (text.isEmpty) {
@@ -132,7 +575,7 @@ class _KnowledgeBaseSectionState extends State<KnowledgeBaseSection> {
             ),
             if (widget.role == 'expert')
               TextButton(
-                onPressed: () {},
+                onPressed: _showManageFeedSheet,
                 style: TextButton.styleFrom(
                   padding: EdgeInsets.zero,
                   minimumSize: const Size(50, 20),
@@ -188,7 +631,7 @@ class _KnowledgeBaseSectionState extends State<KnowledgeBaseSection> {
                 
                 // Image Selector Layout
                 const Text(
-                  "Attach Photo (Select Preset):",
+                  "Attach Photo (Select Preset / Upload Custom):",
                   style: TextStyle(
                     color: Color(0xFFBCCBB7),
                     fontSize: 11,
@@ -200,9 +643,41 @@ class _KnowledgeBaseSectionState extends State<KnowledgeBaseSection> {
                   height: 60,
                   child: ListView.builder(
                     scrollDirection: Axis.horizontal,
-                    itemCount: _presets.length,
+                    itemCount: _presets.length + 1,
                     itemBuilder: (context, index) {
-                      final url = _presets[index];
+                      if (index == 0) {
+                        return GestureDetector(
+                          onTap: _showCustomPhotoDialog,
+                          child: Container(
+                            width: 60,
+                            margin: const EdgeInsets.only(right: 8),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF1C2B3C),
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(
+                                color: (_selectedPresetUrl != null &&
+                                        !_presets.contains(_selectedPresetUrl))
+                                    ? const Color(0xFF54E167)
+                                    : Colors.white24,
+                                width: 1.5,
+                              ),
+                            ),
+                            child: const Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(Icons.add_a_photo_outlined, color: Colors.white70, size: 16),
+                                SizedBox(height: 4),
+                                Text(
+                                  "Custom",
+                                  style: TextStyle(color: Colors.white70, fontSize: 10),
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      }
+                      
+                      final url = _presets[index - 1];
                       final isSelected = _selectedPresetUrl == url;
                       return GestureDetector(
                         onTap: () {
@@ -238,6 +713,54 @@ class _KnowledgeBaseSectionState extends State<KnowledgeBaseSection> {
                     },
                   ),
                 ),
+                if (_selectedPresetUrl != null) ...[
+                  const SizedBox(height: 12),
+                  Stack(
+                    children: [
+                      Container(
+                        height: 120,
+                        width: double.infinity,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: const Color(0xFF54E167), width: 1.5),
+                        ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(6),
+                          child: AppConstants.buildNetworkImage(
+                            context: context,
+                            url: _selectedPresetUrl!,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, e, s) => Container(
+                              color: Colors.black26,
+                              child: const Center(
+                                child: Icon(Icons.image_not_supported, color: Colors.grey),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      Positioned(
+                        top: 8,
+                        right: 8,
+                        child: GestureDetector(
+                          onTap: () {
+                            setState(() {
+                              _selectedPresetUrl = null;
+                            });
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.all(4),
+                            decoration: const BoxDecoration(
+                              color: Colors.black54,
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(Icons.close, color: Colors.white, size: 16),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
                 const SizedBox(height: 16),
                 
                 // Post Button
@@ -386,12 +909,19 @@ class _KnowledgeBaseSectionState extends State<KnowledgeBaseSection> {
                           ),
                         ),
                         const Spacer(),
-                        const Row(
-                          children: [
-                            Icon(Icons.share, size: 16, color: Colors.white60),
-                            SizedBox(width: 4),
-                            Text("Share", style: TextStyle(fontSize: 12, color: Colors.white60)),
-                          ],
+                        InkWell(
+                          onTap: () => _showShareSheet(post),
+                          borderRadius: BorderRadius.circular(4),
+                          child: const Padding(
+                            padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            child: Row(
+                              children: [
+                                Icon(Icons.share, size: 16, color: Colors.white60),
+                                SizedBox(width: 4),
+                                Text("Share", style: TextStyle(fontSize: 12, color: Colors.white60)),
+                              ],
+                            ),
+                          ),
                         ),
                         const SizedBox(width: 8),
                       ],
