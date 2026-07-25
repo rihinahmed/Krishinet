@@ -1,6 +1,7 @@
                            🌱 KrishiNet – Digital Agro Marketplace & Management System  
 
-📌 **Overview**
+📌 **Overview** 
+
 KrishiNet is a farmer‑friendly digital platform designed to connect **Government Officers, Farmers, Buyers, and Agri Expert** in Bangladesh. It empowers farmers with direct market access, government support, and expert consultation, while enabling administrators to monitor and manage agricultural activities efficiently.  
 
 
